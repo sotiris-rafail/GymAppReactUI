@@ -1,0 +1,22 @@
+{
+  "name": "foundry-gym-ui-react",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "React UI for the Foundry gym calendar. Talks to the Spring Boot backend over HTTP.",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5173 --strictPort"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "4.3.4",
+    "vite": "5.4.11"
+  },
+  "engines": { "node": ">=18" }
+}
