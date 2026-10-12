@@ -207,7 +207,8 @@ input[type="number"],input[type="time"]{font-variant-numeric:tabular-nums}
 .login h2{font-size:28px}
 .login .seg{display:flex}
 .login .seg button{flex:1;min-height:40px}
-.form{display:flex;flex-direction:column;gap:22px;padding:24px 20px;border-radius:16px;background:var(--surface);box-shadow:var(--card-ring)}
+.form{display:flex;flex-direction:column;gap:20px;padding:24px 20px;border-radius:16px;background:var(--surface);box-shadow:var(--card-ring)}
+.form .field{flex:0 0 auto}
 .form .btn{align-self:stretch}
 .err{margin:0;padding:10px 14px;border-radius:12px;background:var(--bad-soft);color:var(--bad);font-weight:500;font-size:14px}
 .hint{padding:14px 16px;border-radius:12px;background:var(--surface-2);color:var(--muted);font-size:14px;line-height:1.8}
