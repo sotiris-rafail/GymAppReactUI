@@ -27,7 +27,11 @@ export async function loadRemoteConfig() {
     cfg.banner = p['banner.text'] || '';
     cfg.footer = p['footer.text'] || '';
     // An address set by hand in config.js wins over the one in the config server.
-    if (!window.FOUNDRY_API_BASE && p['api.base']) setApiBase(p['api.base']);
+    // A localhost address means the visitor's own machine, so it is ignored when the page is opened from another host.
+    const base = p['api.base'];
+    const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(base || '');
+    const pageLocal = ['localhost', '127.0.0.1', ''].includes(location.hostname);
+    if (!window.FOUNDRY_API_BASE && base && (!isLocal || pageLocal)) setApiBase(base);
     cfg.loaded = true;
     applyTitle();
     return true;

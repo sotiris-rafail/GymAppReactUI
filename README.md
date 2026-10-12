@@ -112,16 +112,16 @@ Because the browser calls the API with a login cookie, open the UI and the API o
 
 ## Changing addresses
 
-The backend address is read from `public/config.js` when the page loads:
+By default the page calls its own address, and the UI server (`npm start`, `npm run dev`) forwards everything under
+`/api` to the backend at `http://127.0.0.1:8080`. The backend can therefore stay private on the same machine (for
+example on EC2: only port 5173 is open, 8080 is not). No CORS setting or cookie workaround is needed.
 
-    window.FOUNDRY_API_BASE = 'http://localhost:8080';
-
-Leave it commented out to use the same host as the page on port 8080. Because `config.js` is copied unchanged into
-`dist/`, you can edit `dist/config.js` after a build without rebuilding.
-
-The backend only accepts calls from the addresses in its `GYM_CORS_ORIGINS` setting (default
-`http://localhost:5173,http://127.0.0.1:5173`). Open the UI and the API on the same host name: `localhost` with
-`localhost`, or `127.0.0.1` with `127.0.0.1`. Mixing them makes the browser drop the login cookie.
+- Backend on another port or machine: `API_PROXY=http://127.0.0.1:9090 npm start`
+- Call a backend directly instead (UI hosted elsewhere): uncomment `window.FOUNDRY_API_BASE = 'http://...'` in
+  `public/config.js` (or `dist/config.js` after a build, no rebuild needed). The backend must then allow the UI's address
+  in `GYM_CORS_ORIGINS`, and the UI and API should share a host name so the login cookie sticks.
+- A `localhost` value of `api.base` from the config server is ignored when the page is opened from another host,
+  because there `localhost` would mean the visitor's own computer.
 
 ## How the connection works
 

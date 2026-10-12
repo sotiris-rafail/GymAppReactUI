@@ -1,8 +1,9 @@
 import { I18N } from './i18n.js';
 
-/* Where the Spring Boot backend lives. Set window.FOUNDRY_API_BASE in public/config.js to change it. */
+/* Where the backend is. By default the page's own address: the UI server forwards /api to the backend
+   (see vite.config.js). Set window.FOUNDRY_API_BASE in public/config.js to call a backend directly instead. */
 const clean = (v) => String(v).replace(/\/+$/, '');
-export let API_BASE = clean(window.FOUNDRY_API_BASE || (location.protocol + '//' + (location.hostname || 'localhost') + ':8080'));
+export let API_BASE = clean(window.FOUNDRY_API_BASE || location.origin);
 /* The config server may supply the address (see remote.js); importers see the new value (ES live binding). */
 export function setApiBase(v) { API_BASE = clean(v); }
 
