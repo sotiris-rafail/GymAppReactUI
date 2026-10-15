@@ -3,7 +3,9 @@ import { API_BASE } from './api.js';
 import { useGym } from './state.jsx';
 import { tSlot } from './util.js';
 import { cfg } from './remote.js';
-import Login from './components/Login.jsx';
+import LoginModal from './components/LoginModal.jsx';
+import Home from './components/Home.jsx';
+import ProfilePage from './components/ProfilePage.jsx';
 import MemberView from './components/MemberView.jsx';
 import AdminView from './components/AdminView.jsx';
 import Modal from './components/Modal.jsx';
@@ -18,9 +20,14 @@ function Header() {
     <header className="top">
       <div className="brand">{cfg.brand}<small>{T('tagline')}</small></div>
       <div className="who">
+        {!g.auth && !g.booting && !g.fatalErr && (
+          <button className="btn" id="open-login" onClick={() => g.setShowLogin(true)}>{T('home.login')}</button>
+        )}
         {g.auth && (
           <>
             <span>{tSlot('signedInAs', {}, 'name', <b key="n">{g.isAdmin ? T('admin') : g.auth.name}</b>)}</span>
+            <a className="btn ghost" id="profile-link" href="/profile" aria-current={g.onProfile ? 'page' : undefined}
+              onClick={(e) => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; e.preventDefault(); g.navigate('/profile'); }}>{T('profile.link')}</a>
             <button className="btn ghost" id="logout" onClick={() => g.run(g.logout)}>{T('logout')}</button>
           </>
         )}
@@ -43,7 +50,8 @@ export default function App() {
   let body;
   if (g.booting) body = <p className="muted status">{T('loading')}</p>;
   else if (g.fatalErr) body = <div className="note status">{T('fatal', { url: API_BASE, reason: g.fatalErr.message || T('networkError') })}</div>;
-  else if (!g.auth) body = <Login />;
+  else if (!g.auth) body = <Home />;
+  else if (g.onProfile) body = <ProfilePage />;
   else body = g.isAdmin ? <AdminView /> : <MemberView />;
   return (
     <>
@@ -52,6 +60,7 @@ export default function App() {
       {body}
       <footer className="foot"><span>{cfg.footer || T('footer', { url: API_BASE })}</span></footer>
       <Modal />
+      {g.showLogin && !g.auth && !g.booting && <LoginModal />}
       <div className="toast-wrap">
         <div id="toast" className="toast" role="status" aria-live="polite" hidden={g.toastState.hidden}>{g.toastState.msg}</div>
       </div>

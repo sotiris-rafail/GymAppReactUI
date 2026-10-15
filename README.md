@@ -11,7 +11,7 @@ talks to it over HTTP.
       src/App.jsx          header, footer, toast and which screen to show
       src/state.jsx        all app state and actions (login, bookings, admin drafts, save)
       src/api.js           fetch wrapper and the backend's data shapes
-      src/remote.js        reads the public settings from the config server
+      src/remote.js        reads the settings from this server's /_config/ui
       src/drafts.js        "what changed" between saved data and the admin's draft
       src/i18n.js          English and Greek texts
       src/styles.css       all styling (themes, Material look)
@@ -61,17 +61,31 @@ The backend enforces this: members have no endpoint to change a plan.
 
 ## Admin pages
 
-The admin screen has three pages, each with its own address so Back, reload and bookmarks work:
+The admin screen has a side bar with five pages, each with its own path so Back, reload and bookmarks work
+(`/admin` alone goes to `/admin/plans`; members who open an admin path are sent to `/`; visitors who are not logged
+in get the login form and land on the page they asked for):
 
-* `#/plans`: subscription plans (name, price, visits per month).
-* `#/schedule`: classes (max people, days) and the weekly timetable.
-* `#/members`: assign each member's plan, a **History** button per member (every plan they have held with dates, and
+* `/admin/plans`: subscription plans (name, price, visits per month).
+* `/admin/schedule`: classes (max people, days) and the timetable, which can be shown by **Week** or **Month** (previous/next/today buttons; closed days are marked; the choice is remembered in the browser).
+* `/admin/members`: assign each member's plan, a **History** button per member (every plan they have held with dates, and
   visits used in each month), and **Class attendance** for the current month: every class with who is booked on which
   date (sessions that have already happened show as attended).
+* `/admin/home`: the home page items (photos, Instagram posts, offers and announcement cards).
+* `/admin/closed`: days with no classes (see below).
+
+When the site is served by a static host, the host must return `index.html` for unknown paths such as `/admin/plans`
+(`vite dev` and `vite preview` already do).
+
+## Closed days
+
+Sundays are always closed: the calendar shows them struck out, no classes are offered and the Sunday chip is disabled
+when editing a class. On `/admin/closed` the admin can also close any other date (holiday, maintenance) with an optional
+reason, and open it again. This page saves immediately (no **Save changes** step). Members see closed days hatched on the
+calendar with the reason, and the backend refuses to book them. Bookings that already exist on a date that is closed later are kept.
 
 ## Saving on the admin pages
 
-Edits on the Plans, Schedule and Members pages are drafts. Nothing is sent to the server until the admin presses **Save changes** at the bottom of that page. A dialog then lists every change (new, changed, removed) with **Cancel** and **Save**. **Discard changes** throws the page's draft away. A dot on a tab marks a page with unsaved changes, drafts survive switching between pages, and the browser warns before leaving or logging out with unsaved changes.
+Edits on the Plans, Schedule, Members and Home page pages are drafts. Nothing is sent to the server until the admin presses **Save changes** at the bottom of that page. A dialog then lists every change (new, changed, removed) with **Cancel** and **Save**. **Discard changes** throws the page's draft away. A dot next to a side bar link marks a page with unsaved changes, drafts survive switching between pages, and the browser warns before leaving or logging out with unsaved changes.
 
 Saving sends one request per change, so it is not atomic. If one fails, the dialog stays open with the reason, the changes that did succeed are kept, and the rest remain as the draft. Plans that are new and unsaved cannot be assigned to members until they are saved.
 
@@ -90,21 +104,35 @@ button in the header switches and remembers the choice. The colors are variables
 
 ## Settings from the config server
 
-Before the page starts, the UI reads its public settings from the Foundry config server
-(`GET http://<this host>:8888/public/config/ui`, no login) and waits at most about 2.5 seconds for it. The `ui`
-application in the console controls:
+Only a verified application may read settings from the config server, and a browser cannot be one (whatever it knows,
+every visitor knows). So the **UI server** (the process started by `npm start` / `npm run dev`) does it:
+
+1. it trades its client id and secret for a short-lived token (`POST /auth/token` on the config server),
+2. it reads `GET /config/ui` with `Authorization: Bearer <token>`,
+3. it hands the result to the page at `/_config/ui`. The page, which waits at most about 2.5 seconds for it, never sees
+   the client secret or the token.
+
+Set these where the UI server runs (defaults in brackets):
+
+    FOUNDRY_CONFIG_URL=http://localhost:8888      (address of the config server)
+    CONFIG_CLIENT_ID=ui  CONFIG_CLIENT_SECRET=ui-secret     (must match a client in the config server's cfg.clients)
+
+For example: `CONFIG_CLIENT_SECRET=... npm start`. If this is wrong or the config server is down the page still loads with
+the built-in defaults, and the UI server prints a `[config]` warning. A UI that is only served as static files (no UI
+server) cannot read settings and always uses the defaults. The `ui` settings are the ones the config server marks
+non-secret; they are public by nature, so never put a secret in the `ui` application. The settings are:
 
 | Setting | Effect |
 |---|---|
-| `brand.name` | name in the header and browser tab (default `Foundry`) |
+| `brand.name` | name in the header and browser tab (default `Gym`, also used when the setting is empty or the config server is not running). It is used in the header, the browser tab, the welcome heading and the connection messages |
 | `currency.symbol` | symbol in front of prices (default `€`) |
 | `banner.text` | notice shown above every page (empty = none) |
 | `footer.text` | replaces the footer line (empty = default) |
 | `api.base` | address of the gym backend |
 
 If the config server is not running, the UI works with the built-in defaults above and the backend address from
-`public/config.js`. An address set by hand in `config.js` (`FOUNDRY_API_BASE`) wins over `api.base`. Point the UI at a
-different config server with `window.FOUNDRY_CONFIG_URL`, or set it to `''` to ignore it. Changes in the console show up
+`public/config.js`. An address set by hand in `config.js` (`FOUNDRY_API_BASE`) wins over `api.base`. Set
+`window.FOUNDRY_CONFIG_URL = ''` in `config.js` to ignore the config server. Changes in the console show up
 the next time the page loads.
 
 Because the browser calls the API with a login cookie, open the UI and the API on the same host name (`localhost` with
@@ -127,3 +155,80 @@ example on EC2: only port 5173 is open, 8080 is not). No CORS setting or cookie 
 
 Every call goes to the backend with `credentials: 'include'`, so the login session cookie travels with it. The UI keeps
 no data of its own: plans, classes, bookings and members all live in the backend database.
+
+## Home page and admin "Home page" items
+
+Visitors who are not logged in see a home page with the items the admin manages (photos, Instagram posts and offers).
+A "Log in / Sign up" button in the top bar (just before the theme switch) opens the login and sign up form as an overlay on top of the home page (close it with Cancel, Escape or a click outside; there is no dimmed backdrop); logging out returns to the home page. Logged-in
+members see the same items under "News and offers" at the bottom of their page.
+
+The admin edits them on the fourth admin page, "Home page", with the same save button and confirm dialog as the other
+pages. Each item has a type, title, text, optional link, optional photo (upload, shrunk in the browser, or a web
+address), a "Show on the home page" switch and up/down buttons for the order. Instagram does not allow other sites to
+show a post photo directly, so for an Instagram item upload the photo and paste the post link.
+The backend needs the new `promo` table (Liquibase applies it on start-up) and the `/api/promos` endpoints, so deploy
+the new `foundry-gym-backend.zip` together with this UI.
+
+The home page is laid out as a bento grid: tiles of different sizes (every sixth tile is large, every third a wide one,
+by position in the list, so the order you set decides the layout). Each tile has a "Draw a border around it" switch;
+tiles without a border get a soft filled background instead.
+
+Tiles do not show their type (Photo, Instagram, Offer); the type only decides the link button text. Each tile also has a
+"Show the title" switch. A hidden title is still used as the photo's description for screen readers.
+
+## Profile page (/profile)
+
+Logged-in members (and the admin) have a "Profile" link in the top bar that opens `/profile`: name, email, account type
+and current plan, read only, plus a form to change the password (current password, new password, repeat). Nothing else
+can be changed by the person: the name and email are fixed and the plan is assigned by the admin. Opening `/profile`
+while logged out shows the login overlay first and lands on the profile afterwards. The page needs the backend's
+`PUT /api/auth/password`, so deploy the new `foundry-gym-backend.zip` with it. The UI server answers `/profile` with the
+app (a single-page app), so reloading on that address works with `npm start` / `npm run dev`; a static host must be set
+up to serve `index.html` for unknown paths.
+
+
+## Announcement cards
+
+On `/admin/home`, choose the type **Announcement card** for an item. It has a photo, a title, a short description and a
+card text that may contain simple HTML. On the home page the photo fills the card (cropped), the card lifts with a shadow
+on hover (or keyboard focus), and clicking or pressing Enter opens it: the whole photo (not cropped), title, description
+and the HTML text. Esc, the Close button or a click outside closes it. The HTML is cleaned with DOMPurify before it is
+shown (scripts, styles, forms, frames and event handlers are removed; links open in a new tab). Run `npm install` after
+updating, since DOMPurify is a new dependency.
+
+## Preferences (profile page)
+
+Members see a **Preferences** section on `/profile` with four switches, all off by default and saved as soon as they are
+turned on or off: marketing emails, new plans, plan almost used up (2 visits remain this month) and a visits-left reminder
+(after the 21st of the month, if visits are still left). Admins do not see the section. The app only stores the choices;
+sending the emails is a separate job that has to read them from the backend (`/api/me/preferences`).
+
+## Photos from a web address
+
+Pictures are requested without a Referer header (many sites refuse to show their images to pages on other addresses), and
+a picture that cannot be loaded shows a "Photo unavailable" box. On the home page admin page a red message explains what
+to do. The address must be the direct address of an image file, not a web page (for example an Instagram post or Google
+Images page). If the site still blocks it, download the picture and upload it instead.
+
+## Instagram posts
+
+For an item of type **Instagram**, paste the address of a public post or reel from the gym's profile (for example
+`https://www.instagram.com/p/AbC123/` or `https://www.instagram.com/reel/AbC123/`) into the link field. Visitors then see
+the post itself, using Instagram's own embed (photos, carousels, and videos that play on the page), sized to fit, with a
+**View on Instagram** button under it. Without such an address the item stays a simple tile (photo, text, link). The embed
+loads from instagram.com, so visitors' browsers contact Instagram and an ad blocker may hide it. The post must be public.
+
+## Tile size and date limit (home page items)
+
+Every item on `/admin/home` has a **Size** (width 1 to 4 columns, height 1 to 3 rows, or automatic) and an optional
+**Hide on** date. From that date on the item is no longer shown on the home page (the backend stops returning it too),
+so "hide on today + 7 days" means it shows for exactly 7 days. The buttons **3 days**, **1 week** and **1 month** fill in
+the date. Expired items stay in the admin list (marked as expired) so they can be given a new date. On small screens the
+width is capped to the columns that fit; Instagram posts keep the height of the post.
+
+## Number sizes and backgrounds (home page items)
+
+The tile **Size** is typed as numbers: width 1 to 4 columns and height 1 to 8 rows (values outside the range snap to the
+nearest one; leave a box empty for automatic). Each item can also have a **Background colour** (colour picker or `#rrggbb`;
+the text turns black or white to stay readable) and a **Background picture** behind the whole tile (upload or web address;
+a dark fade keeps the text readable). The photo at the top of a tile and the background picture are independent.

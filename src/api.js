@@ -32,3 +32,13 @@ export const planBody = (p) => ({ name: p.name, price: p.price, visitsPerMonth: 
 export const classBody = (c) => ({
   name: c.name, coach: c.coach, startTime: c.time, durationMinutes: c.duration, capacity: c.capacity, days: c.days,
 });
+
+/* Home page items. sortOrder is the position in the list. */
+export const normPromo = (p, i) => ({
+  id: p.id, kind: p.kind, title: p.title || '', body: p.body || '', image: p.image || '', link: p.linkUrl || '', content: p.content || '', hideOn: p.hideOn || '', colSpan: p.colSpan || 0, rowSpan: p.rowSpan || 0, bgColor: p.bgColor || '', bgImage: p.bgImage || '',
+  active: p.active !== false, bordered: p.bordered !== false, showTitle: p.titleVisible !== false, sortOrder: typeof i === 'number' ? i : p.sortOrder,
+});
+export const promoBody = (p) => ({
+  kind: p.kind, title: p.title, body: p.body, image: p.image, linkUrl: p.link, content: p.kind === 'CARD' ? p.content : '', hideOn: p.hideOn || null, colSpan: p.colSpan || 0, rowSpan: p.rowSpan || 0, bgColor: /^#[0-9a-f]{6}$/i.test(p.bgColor) ? p.bgColor : '', bgImage: p.bgImage || '', sortOrder: p.sortOrder, active: p.active, bordered: p.bordered, titleVisible: p.showTitle,
+});
+

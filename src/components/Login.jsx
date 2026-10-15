@@ -65,7 +65,7 @@ export default function Login() {
   const kind = isAdmin ? 'admin' : reg ? 'reg' : 'member';
   return (
     <div className="login">
-      <div><h2>{T('login.' + kind + '.title')}</h2><p className="sub">{T('login.' + kind + '.sub')}</p></div>
+      <div><h2 id="login-title">{T('login.' + kind + '.title')}</h2><p className="sub">{T('login.' + kind + '.sub')}</p></div>
       <div className="seg" role="group" aria-label={T('login.type')}>
         <button id="lr-member" aria-pressed={!isAdmin} onClick={() => { g.setLoginRole('member'); g.setRegistering(false); }}>{T('member')}</button>
         <button id="lr-admin" aria-pressed={isAdmin} onClick={() => { g.setLoginRole('admin'); g.setRegistering(false); }}>{T('admin')}</button>

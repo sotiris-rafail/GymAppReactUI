@@ -1,6 +1,7 @@
 import { I18N } from '../i18n.js';
 import { useGym } from '../state.jsx';
-import { p2, money, startOf, label, shortLabel, toneOf, dayNames, parseKey, TODAY_K } from '../util.js';
+import PromoBoard from './PromoBoard.jsx';
+import { p2, money, startOf, label, shortLabel, toneOf, dayNames, parseKey, TODAY_K, isSundayKey, isLive } from '../util.js';
 
 const T = (k, p) => I18N.t(k, p);
 const TN = (k, n, p) => I18N.tn(k, n, p);
@@ -39,6 +40,13 @@ function Meter({ plan, mine, att, bk, cy, cm }) {
   );
 }
 
+/* null when open; otherwise the reason text: Sundays are always closed, other dates are closed by the admin */
+function closedInfo(list, k) {
+  if (isSundayKey(k)) return T('cal.sunday');
+  const c = list.find((x) => x.date === k);
+  return c ? (c.reason || T('cal.closed')) : null;
+}
+
 function Calendar() {
   const g = useGym();
   const { cy, cm, sel } = g.cal;
@@ -49,12 +57,14 @@ function Calendar() {
     const k = cy + '-' + p2(cm + 1) + '-' + p2(d);
     const ss = g.sessions[k] || [];
     const mineDay = ss.some((s) => s.mine);
+    const closed = closedInfo(g.closedDays, k);
     const cls = ['cell'];
+    if (closed) cls.push('closed');
     if (k < TODAY_K) cls.push('past');
     if (k === TODAY_K) cls.push('today');
     if (k === sel) cls.push('sel');
     if (mineDay) cls.push('mine');
-    const lbl = label(k) + ', ' + TN('cal.cls', ss.length) + (mineDay ? ', ' + T('cal.youBooked') : '');
+    const lbl = label(k) + ', ' + (closed ? T('cal.closed') : TN('cal.cls', ss.length)) + (mineDay ? ', ' + T('cal.youBooked') : '');
     cells.push(
       <button key={k} className={cls.join(' ')} id={'day-' + k} aria-label={lbl} aria-pressed={k === sel}
         onClick={() => {
@@ -85,6 +95,7 @@ function Calendar() {
       <div className="legend cal-legend">
         <span><i className="sw ok" />{T('cal.open')}</span><span><i className="sw warn" />{T('cal.few')}</span>
         <span><i className="sw bad" />{T('cal.full')}</span><span><i className="sw mine" />{T('cal.mine')}</span>
+        <span><i className="sw closed" />{T('cal.closed')}</span>
       </div>
     </section>
   );
@@ -127,12 +138,13 @@ function DayPanel({ plan }) {
   const ss = g.sessions[sel] || [];
   const prefix = sel.slice(0, 7);
   const used = g.bookings.filter((b) => b.date.indexOf(prefix) === 0).length;
-  const blocked = plan && used >= plan.visits && sel >= TODAY_K;
+  const closed = closedInfo(g.closedDays, sel);
+  const blocked = !closed && plan && used >= plan.visits && sel >= TODAY_K;
   return (
     <section className="panel" id="day-panel" aria-label={T('day.aria')}>
-      <div className="day-h"><h2>{label(sel)}</h2><p className="sub">{ss.length ? TN('cal.cls', ss.length) : T('day.none')}</p></div>
+      <div className="day-h"><h2>{label(sel)}</h2><p className="sub">{closed ? T('cal.closed') : ss.length ? TN('cal.cls', ss.length) : T('day.none')}</p></div>
       {blocked && <p className="note">{T('day.blocked', { n: plan.visits, plan: plan.name || T('day.yourPlan'), month: I18N.month(parseKey(sel).getMonth()) })}</p>}
-      {!ss.length ? <p className="empty">{T('day.pick')}</p> : ss.map((s) => <SessionRow key={s.classId + s.date} s={s} plan={plan} used={used} />)}
+      {closed ? <p className="empty" id="day-closed">{(isSundayKey(sel) ? T('day.closedSunday') : T('day.closed', { why: closed }))}</p> : !ss.length ? <p className="empty">{T('day.pick')}</p> : ss.map((s) => <SessionRow key={s.classId + s.date} s={s} plan={plan} used={used} />)}
     </section>
   );
 }
@@ -176,6 +188,12 @@ export default function MemberView() {
       </section>
       <div className="main"><Calendar /><DayPanel plan={plan} /></div>
       <Upcoming />
+      {g.basePromos.some(isLive) && (
+        <section aria-label={T('promo.news')}>
+          <div className="sec-h"><div><h2>{T('promo.news')}</h2></div></div>
+          <PromoBoard items={g.basePromos.filter(isLive)} />
+        </section>
+      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@ var LANGS=[{code:'en',label:'EN',name:'English'},{code:'el',label:'ΕΛ',name:'�
 
 var DATA={
 en:{
-  title:'Foundry Gym Calendar',
+  title:'{brand}',
   months:['January','February','March','April','May','June','July','August','September','October','November','December'],
   monthsOf:['January','February','March','April','May','June','July','August','September','October','November','December'],
   monthsShort:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
@@ -16,8 +16,8 @@ en:{
     signedInAs:'Signed in as {name}',
     admin:'Admin',member:'Member',
     logout:'Log out',
-    footer:'Connected to the Foundry API at {url}. Everything you change is saved on the server.',
-    fatal:'Cannot reach the Foundry backend at {url} ({reason}). Start it with mvn spring-boot:run, then reload this page. If the backend runs somewhere else, set the address in config.js.',
+    footer:'Connected to the {brand} API at {url}. Everything you change is saved on the server.',
+    fatal:'Cannot reach the {brand} backend at {url} ({reason}). Start it with mvn spring-boot:run, then reload this page. If the backend runs somewhere else, set the address in config.js.',
     networkError:'network error',
     'login.admin.title':'Admin login','login.reg.title':'Create a member account','login.member.title':'Member login',
     'login.admin.sub':'Log in to set up plans, classes and class sizes.',
@@ -46,6 +46,17 @@ en:{
     'plan.used':'{used} of {total} visits used, {left} left',
     'plan.attended':'Attended {n}','plan.booked':'Booked {n}','plan.left':'Left {n}',
     'cal.aria':'Month calendar','cal.prev':'Previous month','cal.next':'Next month','cal.today':'Today',
+    'promo.kind.CARD':'Announcement card','a.promo.content':'Card text (HTML allowed)','a.promo.contentHint':'Shown when a visitor opens the card. You can use simple HTML such as <p>, <b>, <i>, <ul>, <a href> and <img>. Scripts and styles are removed.','promo.close':'Close','promo.read':'Open','chg.contentChanged':'Card text changed',
+    'photo.failed':'Photo unavailable','a.promo.photoFailed':'This photo could not be loaded. Use the direct address of an image file (it usually ends in .jpg, .png or .webp; right-click the picture and choose Copy image address), not the address of a web page. Some sites also block their pictures from being shown elsewhere. In that case, download the picture and upload it here instead.','a.promo.photoBad':'That is not a valid image address. It must start with http:// or https:// and contain no spaces.',
+    'a.promo.hideOn':'Hide on (date)','a.promo.hideNone':'Always shown (no date limit).','a.promo.hideNote':'Shown until the day before {date}; hidden from {date} on.','a.promo.expired':'Date reached: this item is hidden from the home page.','a.promo.noLimit':'no limit','a.promo.noLimitBtn':'No limit','a.promo.d3':'3 days','a.promo.d7':'1 week','a.promo.d30':'1 month',
+    'a.promo.size':'Size on the home page','a.promo.width':'Width','a.promo.height':'Height','a.promo.auto':'automatic',
+    'a.promo.bgColor':'Background colour','a.promo.noBgColor':'No colour','a.promo.bgColorBad':'Use a colour like #1a2b3c.','a.promo.bgImage':'Background picture (behind the whole tile)','a.promo.sizeHint':'Type how many grid columns (1 to 4) and rows (1 to 8) the tile covers, or leave a box empty for automatic.','chg.bgAdded':'Background picture added','chg.bgChanged':'Background picture changed','chg.bgRemoved':'Background picture removed',
+    'cal.closed':'Closed','cal.sunday':'Closed on Sundays','day.closedSunday':'The gym is always closed on Sundays. No classes can be booked.','day.closed':'The gym is closed on this day ({why}). No classes can be booked.',
+    'a.nav.closed':'Closed days','a.class.sunday':'The gym is always closed on Sundays',
+    'a.closed.aria':'Closed days','a.closed.title':'Closed days','a.closed.sub':'Dates with no classes, such as holidays. Members cannot book on these days. Changes are saved straight away.',
+    'a.closed.date':'Date','a.closed.reason':'Reason (optional)','a.closed.add':'Close this day','a.closed.reopen':'Open again','a.closed.none':'No upcoming closed days.',
+    'a.closed.needDate':'Choose a date first.','a.closed.sunday':'Sundays are always closed.','a.closed.sundays':'Sundays are always closed and do not need to be added.',
+    'a.closed.past':'Past closed days ({n})','a.closed.added':'{date} is now closed.','a.closed.removed':'{date} is open again.',
     'cal.open':'Open','cal.few':'Few spots left','cal.full':'Full','cal.mine':'You are booked',
     'cal.cls.one':'{n} class','cal.cls.other':'{n} classes','cal.youBooked':'you have a booking',
     'day.aria':'Classes on the selected day','day.none':'No classes scheduled','day.pick':'Pick another day on the calendar.',
@@ -70,20 +81,39 @@ en:{
     'a.class.name':'Class name','a.class.coach':'Coach','a.class.time':'Starts at','a.class.length':'Length (min)','a.class.max':'Max people',
     'a.class.repeats':'Repeats weekly on','a.class.remove':'Remove class',
     'a.classes.removed':'Class removed along with its bookings.',
-    'a.board.aria':'Weekly timetable','a.board.title':'Weekly timetable','a.board.sub':'What members see each week, updated as you edit.',
-    'a.board.none':'No classes','a.board.max':'max {n}',
+    'a.board.aria':'Weekly timetable','a.board.title':'Timetable','a.board.sub':'What members see, by week or by month. Closed days are marked. Updated as you edit.',
+    'a.board.view':'Timetable view','a.board.week':'Week','a.board.month':'Month','a.board.prev':'Previous','a.board.next':'Next','a.board.none':'No classes','a.board.max':'max {n}',
     'a.members.aria':'Members','a.members.title':'Members','a.members.sub':'Assign each member a plan here. Members can see their plan but cannot change it. Visit usage is for {month}.',
     'a.att.title':'Class attendance','a.att.sub':'Who is booked into each class this month. Sessions that have already happened count as attended.','a.att.bookings.one':'{n} booking','a.att.bookings.other':'{n} bookings','a.att.members.one':'{n} member','a.att.members.other':'{n} members','a.att.none':'Nobody is booked into this class this month.','a.att.attended':'Attended','a.att.upcoming':'Upcoming',
     'a.nav':'Admin pages','a.nav.plans':'Plans','a.nav.schedule':'Schedule','a.nav.members':'Members',
     'a.hist.btn':'History','a.hist.title':'History: {name}','a.hist.plans':'Plans held','a.hist.none':'No plans yet.','a.hist.active':'Active','a.hist.months':'Visits used per month','a.hist.usedOf':'{used} of {total} visits','a.hist.visitsUsed.one':'{n} visit','a.hist.visitsUsed.other':'{n} visits','a.hist.noPlanMonth':'no plan','a.hist.close':'Close',
     'a.save':'Save changes','a.discard':'Discard changes','a.discard.confirm':'Discard all unsaved changes on this page?','a.savebar.none':'No unsaved changes','a.savebar.n.one':'{n} unsaved change','a.savebar.n.other':'{n} unsaved changes','a.unsaved':'Unsaved changes','a.undo':'Undo','a.save.title':'Save these changes?','a.save.sub':'Nothing is stored until you save. Review what will change:','a.save.cancel':'Cancel','a.save.confirm':'Save','a.save.saving':'Saving...','a.save.done':'Changes saved','a.save.failed':'Could not save: {why}','chg.add':'New','chg.edit':'Changed','chg.remove':'Removed','chg.none':'No changes','chg.empty':'(empty)','chg.planRemoved':'Members on this plan will have no plan.','chg.classRemoved':'Its bookings will be deleted too.','a.members.plan':'Plan','unsaved.leave':'You have unsaved changes. Leave anyway?',
     'a.members.none':'No members yet.','a.members.noPlan':'No plan','a.members.visits':'{used} of {total} visits','a.members.planFor':'Plan for {name}','a.members.assigned':'{name} is now on {plan}.','a.members.unassigned':'Plan removed from {name}.',
-    'a.saving':'Saving...','a.saved':'All changes saved','a.notSaved':'Not saved: {why}'
+    'a.saving':'Saving...','a.saved':'All changes saved','a.notSaved':'Not saved: {why}',
+    'home.login':'Log in / Sign up','login.cancel':'Cancel',
+    'profile.link':'Profile','profile.title':'Your profile','profile.sub':'Your details. Only your password can be changed here.','profile.back':'Back','profile.details':'Your details',
+    'profile.name':'Name','profile.email':'Email','profile.type':'Account type','profile.plan':'Current plan','profile.noPlan':'No plan yet. The gym assigns your plan.','profile.planLine':'· {price} · {visits}',
+    'profile.locked':'Your name, email and plan are managed by the gym. Contact them if something needs to change.',
+    'pref.title':'Preferences','pref.sub':'Choose which emails you want to receive. Everything is off until you turn it on.','pref.saved':'Preference saved.',
+    'pref.marketing':'Marketing emails','pref.marketing.d':'News, offers and other marketing material from the gym.',
+    'pref.newPlans':'New plans','pref.newPlans.d':'An email when a new plan becomes available.',
+    'pref.planEnding':'Plan almost used up','pref.planEnding.d':'An email when only 2 visits remain in your plan this month.',
+    'pref.visitsReminder':'Visits left reminder','pref.visitsReminder.d':'After the 21st of the month, a reminder if you still have visits left.',
+    'profile.pw.title':'Change password','profile.pw.current':'Current password','profile.pw.new':'New password','profile.pw.confirm':'Repeat new password','profile.pw.submit':'Change password',
+    'profile.pw.needAll':'Fill in all three fields.','profile.pw.short':'The new password must be at least 6 characters.','profile.pw.mismatch':'The two new passwords do not match.','profile.pw.same':'Choose a password that is different from the current one.','profile.pw.done':'Password changed','home.back':'Back to home','home.title':'Welcome to {brand}','home.sub':'Classes, memberships and news from us. Log in to book your next class.',
+    'home.empty':'Nothing new yet. Check back soon.','promo.news':'News and offers','promo.untitled':'Untitled item',
+    'promo.kind.PHOTO':'Photo','promo.kind.INSTAGRAM':'Instagram','promo.kind.PROMO':'Offer','promo.open':'Learn more','promo.openIg':'View on Instagram',
+    'a.nav.promos':'Home page','a.promos.aria':'Home page items','a.promos.title':'Home page','a.promos.sub':'Photos, Instagram posts and offers that visitors see on the home page, in this order.',
+    'a.promos.add':'Add an item','a.promos.new':'New item','a.promos.none':'No items yet. Add a photo, an Instagram post or an offer.','a.promos.preview':'Preview','a.promos.order':'Order of items',
+    'a.promo.kind':'Type','a.promo.title':'Title','a.promo.body':'Text','a.promo.link':'Link (optional)','a.promo.image':'Photo','a.promo.upload':'Upload a photo','a.promo.imageUrl':'or photo address',
+    'a.promo.removeImage':'Remove photo','a.promo.active':'Show on the home page','a.promo.bordered':'Draw a border around it','a.promo.showTitle':'Show the title','a.promo.hidden':'Hidden','a.promo.up':'Move up','a.promo.down':'Move down','a.promo.notImage':'Please pick an image file.','a.promo.tooBig':'That photo is too large. Pick a smaller one.',
+    'a.promo.igHint':'Paste the address of the post or reel from the gym\'s Instagram profile (it looks like https://www.instagram.com/p/AbC123/ or https://www.instagram.com/reel/AbC123/) into the link field. Visitors then see the post itself, and videos play right on the page. The post must be public. Without such an address a simple tile with a photo and a link is shown instead.','a.promo.igBad':'This link is not an Instagram post or reel address, so a simple tile is shown. Use an address like https://www.instagram.com/p/AbC123/.',
+    'chg.promoRemoved':'Item removed','chg.photo':'with photo','chg.photoAdded':'Photo added','chg.photoChanged':'Photo changed','chg.photoRemoved':'Photo removed','chg.yes':'Yes','chg.no':'No'
   },
   server:{}
 },
 el:{
-  title:'Foundry – Ημερολόγιο γυμναστηρίου',
+  title:'{brand}',
   months:['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'],
   monthsOf:['Ιανουαρίου','Φεβρουαρίου','Μαρτίου','Απριλίου','Μαΐου','Ιουνίου','Ιουλίου','Αυγούστου','Σεπτεμβρίου','Οκτωβρίου','Νοεμβρίου','Δεκεμβρίου'],
   monthsShort:['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'],
@@ -96,8 +126,8 @@ el:{
     signedInAs:'Συνδεδεμένος ως {name}',
     admin:'Διαχειριστής',member:'Μέλος',
     logout:'Αποσύνδεση',
-    footer:'Συνδεδεμένο με το Foundry API στη διεύθυνση {url}. Ό,τι αλλάζετε αποθηκεύεται στον διακομιστή.',
-    fatal:'Δεν είναι δυνατή η επικοινωνία με το Foundry backend στη διεύθυνση {url} ({reason}). Ξεκινήστε το με mvn spring-boot:run και ανανεώστε τη σελίδα. Αν το backend τρέχει αλλού, ορίστε τη διεύθυνση στο config.js.',
+    footer:'Συνδεδεμένο με το {brand} API στη διεύθυνση {url}. Ό,τι αλλάζετε αποθηκεύεται στον διακομιστή.',
+    fatal:'Δεν είναι δυνατή η επικοινωνία με το {brand} backend στη διεύθυνση {url} ({reason}). Ξεκινήστε το με mvn spring-boot:run και ανανεώστε τη σελίδα. Αν το backend τρέχει αλλού, ορίστε τη διεύθυνση στο config.js.',
     networkError:'σφάλμα δικτύου',
     'login.admin.title':'Σύνδεση διαχειριστή','login.reg.title':'Δημιουργία λογαριασμού μέλους','login.member.title':'Σύνδεση μέλους',
     'login.admin.sub':'Συνδεθείτε για να ορίσετε συνδρομές, μαθήματα και μέγιστο αριθμό ατόμων.',
@@ -126,6 +156,17 @@ el:{
     'plan.used':'{used} από {total} επισκέψεις χρησιμοποιήθηκαν, απομένουν {left}',
     'plan.attended':'Παρακολουθήθηκαν {n}','plan.booked':'Κρατημένες {n}','plan.left':'Απομένουν {n}',
     'cal.aria':'Μηνιαίο ημερολόγιο','cal.prev':'Προηγούμενος μήνας','cal.next':'Επόμενος μήνας','cal.today':'Σήμερα',
+    'promo.kind.CARD':'Κάρτα ανακοίνωσης','a.promo.content':'Κείμενο κάρτας (επιτρέπεται HTML)','a.promo.contentHint':'Εμφανίζεται όταν ο επισκέπτης ανοίξει την κάρτα. Μπορείτε να χρησιμοποιήσετε απλό HTML όπως <p>, <b>, <i>, <ul>, <a href> και <img>. Τα scripts και τα στυλ αφαιρούνται.','promo.close':'Κλείσιμο','promo.read':'Άνοιγμα','chg.contentChanged':'Το κείμενο της κάρτας άλλαξε',
+    'photo.failed':'Η φωτογραφία δεν είναι διαθέσιμη','a.promo.photoFailed':'Δεν ήταν δυνατή η φόρτωση της φωτογραφίας. Χρησιμοποιήστε την άμεση διεύθυνση ενός αρχείου εικόνας (συνήθως τελειώνει σε .jpg, .png ή .webp· κάντε δεξί κλικ στην εικόνα και επιλέξτε Αντιγραφή διεύθυνσης εικόνας), όχι τη διεύθυνση μιας ιστοσελίδας. Ορισμένοι ιστότοποι μπλοκάρουν την εμφάνιση των εικόνων τους αλλού. Σε αυτή την περίπτωση, κατεβάστε την εικόνα και ανεβάστε την εδώ.','a.promo.photoBad':'Η διεύθυνση της εικόνας δεν είναι έγκυρη. Πρέπει να ξεκινά με http:// ή https:// και να μην έχει κενά.',
+    'a.promo.hideOn':'Απόκρυψη στις (ημερομηνία)','a.promo.hideNone':'Εμφανίζεται πάντα (χωρίς όριο ημερομηνίας).','a.promo.hideNote':'Εμφανίζεται μέχρι την προηγούμενη της {date}· κρύβεται από τις {date} και μετά.','a.promo.expired':'Η ημερομηνία έφτασε: το στοιχείο δεν εμφανίζεται στην αρχική σελίδα.','a.promo.noLimit':'χωρίς όριο','a.promo.noLimitBtn':'Χωρίς όριο','a.promo.d3':'3 ημέρες','a.promo.d7':'1 εβδομάδα','a.promo.d30':'1 μήνας',
+    'a.promo.size':'Μέγεθος στην αρχική σελίδα','a.promo.width':'Πλάτος','a.promo.height':'Ύψος','a.promo.auto':'αυτόματο',
+    'a.promo.bgColor':'Χρώμα φόντου','a.promo.noBgColor':'Χωρίς χρώμα','a.promo.bgColorBad':'Χρησιμοποιήστε χρώμα όπως #1a2b3c.','a.promo.bgImage':'Εικόνα φόντου (πίσω από όλο το πλακίδιο)','a.promo.sizeHint':'Πληκτρολογήστε πόσες στήλες (1 έως 4) και γραμμές (1 έως 8) καλύπτει το πλακίδιο ή αφήστε κενό για αυτόματο.','chg.bgAdded':'Προστέθηκε εικόνα φόντου','chg.bgChanged':'Η εικόνα φόντου άλλαξε','chg.bgRemoved':'Αφαιρέθηκε η εικόνα φόντου',
+    'cal.closed':'Κλειστά','cal.sunday':'Κλειστά τις Κυριακές','day.closedSunday':'Το γυμναστήριο είναι πάντα κλειστό τις Κυριακές. Δεν γίνονται κρατήσεις.','day.closed':'Το γυμναστήριο είναι κλειστό αυτή την ημέρα ({why}). Δεν γίνονται κρατήσεις.',
+    'a.nav.closed':'Κλειστές ημέρες','a.class.sunday':'Το γυμναστήριο είναι πάντα κλειστό τις Κυριακές',
+    'a.closed.aria':'Κλειστές ημέρες','a.closed.title':'Κλειστές ημέρες','a.closed.sub':'Ημερομηνίες χωρίς μαθήματα, όπως οι αργίες. Τα μέλη δεν μπορούν να κάνουν κράτηση αυτές τις ημέρες. Οι αλλαγές αποθηκεύονται αμέσως.',
+    'a.closed.date':'Ημερομηνία','a.closed.reason':'Αιτιολογία (προαιρετικά)','a.closed.add':'Κλείσιμο ημέρας','a.closed.reopen':'Άνοιγμα ξανά','a.closed.none':'Καμία επερχόμενη κλειστή ημέρα.',
+    'a.closed.needDate':'Επιλέξτε πρώτα ημερομηνία.','a.closed.sunday':'Οι Κυριακές είναι πάντα κλειστές.','a.closed.sundays':'Οι Κυριακές είναι πάντα κλειστές και δεν χρειάζεται να προστεθούν.',
+    'a.closed.past':'Παλαιότερες κλειστές ημέρες ({n})','a.closed.added':'Η {date} είναι πλέον κλειστή.','a.closed.removed':'Η {date} είναι ξανά ανοιχτή.',
     'cal.open':'Διαθέσιμο','cal.few':'Λίγες θέσεις','cal.full':'Πλήρες','cal.mine':'Έχετε κράτηση',
     'cal.cls.one':'{n} μάθημα','cal.cls.other':'{n} μαθήματα','cal.youBooked':'έχετε κράτηση',
     'day.aria':'Μαθήματα της επιλεγμένης ημέρας','day.none':'Κανένα μάθημα','day.pick':'Επιλέξτε άλλη ημέρα στο ημερολόγιο.',
@@ -150,15 +191,34 @@ el:{
     'a.class.name':'Όνομα μαθήματος','a.class.coach':'Προπονητής','a.class.time':'Ώρα έναρξης','a.class.length':'Διάρκεια (λεπτά)','a.class.max':'Μέγιστο άτομα',
     'a.class.repeats':'Επαναλαμβάνεται εβδομαδιαία','a.class.remove':'Αφαίρεση μαθήματος',
     'a.classes.removed':'Το μάθημα αφαιρέθηκε μαζί με τις κρατήσεις του.',
-    'a.board.aria':'Εβδομαδιαίο πρόγραμμα','a.board.title':'Εβδομαδιαίο πρόγραμμα','a.board.sub':'Ό,τι βλέπουν τα μέλη κάθε εβδομάδα, ενημερώνεται καθώς κάνετε αλλαγές.',
-    'a.board.none':'Κανένα μάθημα','a.board.max':'μέγ. {n}',
+    'a.board.aria':'Εβδομαδιαίο πρόγραμμα','a.board.title':'Πρόγραμμα','a.board.sub':'Ό,τι βλέπουν τα μέλη, ανά εβδομάδα ή μήνα. Οι κλειστές ημέρες σημειώνονται. Ενημερώνεται καθώς κάνετε αλλαγές.',
+    'a.board.view':'Προβολή προγράμματος','a.board.week':'Εβδομάδα','a.board.month':'Μήνας','a.board.prev':'Προηγούμενο','a.board.next':'Επόμενο','a.board.none':'Κανένα μάθημα','a.board.max':'μέγ. {n}',
     'a.members.aria':'Μέλη','a.members.title':'Μέλη','a.members.sub':'Αναθέστε εδώ συνδρομή σε κάθε μέλος. Τα μέλη βλέπουν τη συνδρομή τους αλλά δεν μπορούν να την αλλάξουν. Η χρήση επισκέψεων αφορά τον μήνα {month}.',
     'a.att.title':'Παρουσίες ανά μάθημα','a.att.sub':'Ποιος έχει κλείσει σε κάθε μάθημα αυτόν τον μήνα. Οι συνεδρίες που έχουν ήδη γίνει θεωρούνται παρουσίες.','a.att.bookings.one':'{n} κράτηση','a.att.bookings.other':'{n} κρατήσεις','a.att.members.one':'{n} μέλος','a.att.members.other':'{n} μέλη','a.att.none':'Κανείς δεν έχει κλείσει σε αυτό το μάθημα αυτόν τον μήνα.','a.att.attended':'Παρευρέθηκαν','a.att.upcoming':'Επερχόμενο',
     'a.nav':'Σελίδες διαχείρισης','a.nav.plans':'Συνδρομές','a.nav.schedule':'Πρόγραμμα','a.nav.members':'Μέλη',
     'a.hist.btn':'Ιστορικό','a.hist.title':'Ιστορικό: {name}','a.hist.plans':'Συνδρομές που είχε','a.hist.none':'Καμία συνδρομή ακόμη.','a.hist.active':'Ενεργή','a.hist.months':'Επισκέψεις ανά μήνα','a.hist.usedOf':'{used} από {total} επισκέψεις','a.hist.visitsUsed.one':'{n} επίσκεψη','a.hist.visitsUsed.other':'{n} επισκέψεις','a.hist.noPlanMonth':'χωρίς συνδρομή','a.hist.close':'Κλείσιμο',
     'a.save':'Αποθήκευση αλλαγών','a.discard':'Απόρριψη αλλαγών','a.discard.confirm':'Απόρριψη όλων των μη αποθηκευμένων αλλαγών σε αυτή τη σελίδα;','a.savebar.none':'Καμία μη αποθηκευμένη αλλαγή','a.savebar.n.one':'{n} μη αποθηκευμένη αλλαγή','a.savebar.n.other':'{n} μη αποθηκευμένες αλλαγές','a.unsaved':'Μη αποθηκευμένες αλλαγές','a.undo':'Αναίρεση','a.save.title':'Αποθήκευση αυτών των αλλαγών;','a.save.sub':'Τίποτα δεν αποθηκεύεται μέχρι να πατήσετε αποθήκευση. Ελέγξτε τι θα αλλάξει:','a.save.cancel':'Ακύρωση','a.save.confirm':'Αποθήκευση','a.save.saving':'Αποθήκευση...','a.save.done':'Οι αλλαγές αποθηκεύτηκαν','a.save.failed':'Η αποθήκευση απέτυχε: {why}','chg.add':'Νέο','chg.edit':'Αλλαγή','chg.remove':'Διαγραφή','chg.none':'Καμία αλλαγή','chg.empty':'(κενό)','chg.planRemoved':'Τα μέλη αυτής της συνδρομής θα μείνουν χωρίς συνδρομή.','chg.classRemoved':'Θα διαγραφούν και οι κρατήσεις του.','a.members.plan':'Συνδρομή','unsaved.leave':'Έχετε μη αποθηκευμένες αλλαγές. Να φύγετε ούτως ή άλλως;',
     'a.members.none':'Δεν υπάρχουν ακόμη μέλη.','a.members.noPlan':'Χωρίς συνδρομή','a.members.visits':'{used} από {total} επισκέψεις','a.members.planFor':'Συνδρομή για {name}','a.members.assigned':'Το μέλος {name} έχει τώρα τη συνδρομή {plan}.','a.members.unassigned':'Η συνδρομή του μέλους {name} αφαιρέθηκε.',
-    'a.saving':'Αποθήκευση...','a.saved':'Όλες οι αλλαγές αποθηκεύτηκαν','a.notSaved':'Δεν αποθηκεύτηκε: {why}'
+    'a.saving':'Αποθήκευση...','a.saved':'Όλες οι αλλαγές αποθηκεύτηκαν','a.notSaved':'Δεν αποθηκεύτηκε: {why}',
+    'home.login':'Σύνδεση / Εγγραφή','login.cancel':'Άκυρο',
+    'profile.link':'Προφίλ','profile.title':'Το προφίλ σας','profile.sub':'Τα στοιχεία σας. Εδώ μπορείτε να αλλάξετε μόνο τον κωδικό σας.','profile.back':'Πίσω','profile.details':'Τα στοιχεία σας',
+    'profile.name':'Όνομα','profile.email':'Email','profile.type':'Τύπος λογαριασμού','profile.plan':'Τρέχουσα συνδρομή','profile.noPlan':'Δεν έχετε συνδρομή ακόμη. Τη συνδρομή την αναθέτει το γυμναστήριο.','profile.planLine':'· {price} · {visits}',
+    'profile.locked':'Το όνομα, το email και η συνδρομή σας διαχειρίζονται από το γυμναστήριο. Επικοινωνήστε μαζί τους αν κάτι πρέπει να αλλάξει.',
+    'pref.title':'Προτιμήσεις','pref.sub':'Επιλέξτε ποια email θέλετε να λαμβάνετε. Όλα είναι απενεργοποιημένα μέχρι να τα ενεργοποιήσετε.','pref.saved':'Η προτίμηση αποθηκεύτηκε.',
+    'pref.marketing':'Email προώθησης','pref.marketing.d':'Νέα, προσφορές και άλλο διαφημιστικό υλικό από το γυμναστήριο.',
+    'pref.newPlans':'Νέες συνδρομές','pref.newPlans.d':'Email όταν γίνεται διαθέσιμη μια νέα συνδρομή.',
+    'pref.planEnding':'Η συνδρομή τελειώνει','pref.planEnding.d':'Email όταν απομένουν μόνο 2 επισκέψεις στη συνδρομή σας αυτόν τον μήνα.',
+    'pref.visitsReminder':'Υπενθύμιση επισκέψεων','pref.visitsReminder.d':'Μετά τις 21 του μήνα, υπενθύμιση αν έχετε ακόμη επισκέψεις.',
+    'profile.pw.title':'Αλλαγή κωδικού','profile.pw.current':'Τρέχων κωδικός','profile.pw.new':'Νέος κωδικός','profile.pw.confirm':'Επανάληψη νέου κωδικού','profile.pw.submit':'Αλλαγή κωδικού',
+    'profile.pw.needAll':'Συμπληρώστε και τα τρία πεδία.','profile.pw.short':'Ο νέος κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.','profile.pw.mismatch':'Οι δύο νέοι κωδικοί δεν ταιριάζουν.','profile.pw.same':'Επιλέξτε κωδικό διαφορετικό από τον τρέχοντα.','profile.pw.done':'Ο κωδικός άλλαξε','home.back':'Πίσω στην αρχική','home.title':'Καλώς ήρθατε στο {brand}','home.sub':'Μαθήματα, συνδρομές και νέα μας. Συνδεθείτε για να κλείσετε το επόμενο μάθημά σας.',
+    'home.empty':'Δεν υπάρχουν νέα ακόμη. Ξαναπεράστε σύντομα.','promo.news':'Νέα και προσφορές','promo.untitled':'Στοιχείο χωρίς τίτλο',
+    'promo.kind.PHOTO':'Φωτογραφία','promo.kind.INSTAGRAM':'Instagram','promo.kind.PROMO':'Προσφορά','promo.open':'Μάθετε περισσότερα','promo.openIg':'Προβολή στο Instagram',
+    'a.nav.promos':'Αρχική σελίδα','a.promos.aria':'Στοιχεία αρχικής σελίδας','a.promos.title':'Αρχική σελίδα','a.promos.sub':'Φωτογραφίες, αναρτήσεις Instagram και προσφορές που βλέπουν οι επισκέπτες στην αρχική σελίδα, με αυτή τη σειρά.',
+    'a.promos.add':'Προσθήκη στοιχείου','a.promos.new':'Νέο στοιχείο','a.promos.none':'Δεν υπάρχουν στοιχεία ακόμη. Προσθέστε μια φωτογραφία, μια ανάρτηση Instagram ή μια προσφορά.','a.promos.preview':'Προεπισκόπηση','a.promos.order':'Σειρά στοιχείων',
+    'a.promo.kind':'Τύπος','a.promo.title':'Τίτλος','a.promo.body':'Κείμενο','a.promo.link':'Σύνδεσμος (προαιρετικά)','a.promo.image':'Φωτογραφία','a.promo.upload':'Ανέβασμα φωτογραφίας','a.promo.imageUrl':'ή διεύθυνση φωτογραφίας',
+    'a.promo.removeImage':'Αφαίρεση φωτογραφίας','a.promo.active':'Εμφάνιση στην αρχική σελίδα','a.promo.bordered':'Εμφάνιση περιγράμματος','a.promo.showTitle':'Εμφάνιση τίτλου','a.promo.hidden':'Κρυφό','a.promo.up':'Μετακίνηση πάνω','a.promo.down':'Μετακίνηση κάτω','a.promo.notImage':'Επιλέξτε ένα αρχείο εικόνας.','a.promo.tooBig':'Η φωτογραφία είναι πολύ μεγάλη. Επιλέξτε μικρότερη.',
+    'a.promo.igHint':'Επικολλήστε τη διεύθυνση της ανάρτησης ή του reel από το προφίλ του γυμναστηρίου στο Instagram (μοιάζει με https://www.instagram.com/p/AbC123/ ή https://www.instagram.com/reel/AbC123/) στο πεδίο συνδέσμου. Οι επισκέπτες βλέπουν την ίδια την ανάρτηση και τα βίντεο παίζουν απευθείας στη σελίδα. Η ανάρτηση πρέπει να είναι δημόσια. Χωρίς τέτοια διεύθυνση εμφανίζεται ένα απλό πλακίδιο με φωτογραφία και σύνδεσμο.','a.promo.igBad':'Ο σύνδεσμος δεν είναι διεύθυνση ανάρτησης ή reel του Instagram, γι\' αυτό εμφανίζεται απλό πλακίδιο. Χρησιμοποιήστε διεύθυνση όπως https://www.instagram.com/p/AbC123/.',
+    'chg.promoRemoved':'Το στοιχείο αφαιρέθηκε','chg.photo':'με φωτογραφία','chg.photoAdded':'Προστέθηκε φωτογραφία','chg.photoChanged':'Άλλαξε η φωτογραφία','chg.photoRemoved':'Αφαιρέθηκε η φωτογραφία','chg.yes':'Ναι','chg.no':'Όχι'
   },
   /* The backend answers in English. Known messages are shown in Greek, anything else is shown as received. */
   server:{
@@ -168,6 +228,9 @@ el:{
     'No visits left this month.':'Δεν απομένουν επισκέψεις αυτόν τον μήνα.',
     'That class has already started.':'Το μάθημα έχει ήδη ξεκινήσει.',
     'Please log in to continue.':'Συνδεθείτε για να συνεχίσετε.',
+    'Your current password is not correct.':'Ο τρέχων κωδικός δεν είναι σωστός.',
+    'Choose a password that is different from the current one.':'Επιλέξτε κωδικό διαφορετικό από τον τρέχοντα.',
+    'Password must be 6 to 72 characters.':'Ο κωδικός πρέπει να έχει 6 έως 72 χαρακτήρες.',
     'You do not have access to that.':'Δεν έχετε πρόσβαση σε αυτό.',
     'An account with that email already exists. Log in instead.':'Υπάρχει ήδη λογαριασμός με αυτό το email. Συνδεθείτε.',
     'That email and password do not match an admin account.':'Το email και ο κωδικός δεν ταιριάζουν με λογαριασμό διαχειριστή.',
@@ -184,6 +247,7 @@ el:{
 }};
 
 var lang='en';
+var brand='Gym'; /* the name of the app; remote.js sets it from the config server */
 try{var saved=localStorage.getItem('foundry.lang');if(DATA[saved])lang=saved;else if(/^el\b/i.test(navigator.language||''))lang='el';}
 catch(e){if(/^el\b/i.test(navigator.language||''))lang='el';}
 
@@ -197,10 +261,12 @@ export const I18N={
     lang=code;
     try{localStorage.setItem('foundry.lang',code);}catch(e){}
     document.documentElement.lang=code;
-    document.title=DATA[code].title;
+    document.title=fill(DATA[code].title,{brand:brand});
   },
   /* t('key',{n:3}); a missing key falls back to English, then to the key itself */
-  t:function(k,p){var s=DATA[lang].s[k];if(s==null)s=DATA.en.s[k];return s==null?k:fill(s,p);},
+  t:function(k,p){var s=DATA[lang].s[k];if(s==null)s=DATA.en.s[k];return s==null?k:fill(s,Object.assign({brand:brand},p));},
+  /* the app name shown in the header, the browser tab and some texts */
+  setBrand:function(b){brand=(b&&String(b).trim())||'Gym';document.title=fill(DATA[lang].title,{brand:brand});},
   /* tn('cal.cls',2) picks cal.cls.one or cal.cls.other */
   tn:function(k,n,p){var q=p||{};q.n=n;return this.t(k+(n===1?'.one':'.other'),q);},
   month:function(i){return DATA[lang].months[i];},
@@ -215,4 +281,4 @@ export const I18N={
   }
 };
 document.documentElement.lang=lang;
-document.title=DATA[lang].title;
+document.title=fill(DATA[lang].title,{brand:brand});

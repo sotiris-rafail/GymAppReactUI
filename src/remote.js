@@ -1,17 +1,18 @@
-/* Settings that come from the Foundry config server (public ones only, no login). */
+/* Settings that come from the config server (public ones only, no login). */
 import { setApiBase } from './api.js';
+import { I18N } from './i18n.js';
 
 /* Defaults, used when the config server is not running or a setting is empty. */
-export const cfg = { brand: 'Foundry', currency: '€', banner: '', footer: '', loaded: false };
+export const cfg = { brand: 'Gym', currency: '€', banner: '', footer: '', loaded: false };
 
-/* Where the config server is. Set window.FOUNDRY_CONFIG_URL = '' in config.js to switch this off. */
+/* The page asks its own server for the settings (/_config/ui). That server holds the client secret, gets a token from the
+   config server and reads the settings with it, so the browser never has to be trusted with a credential.
+   Set window.FOUNDRY_CONFIG_URL = '' in config.js to switch this off. */
 const configured = window.FOUNDRY_CONFIG_URL;
-export const CONFIG_URL = configured === '' ? '' : String(
-  configured || (location.protocol + '//' + (location.hostname || 'localhost') + ':8888')
-).replace(/\/+$/, '');
+export const CONFIG_URL = configured === '' ? '' : '/_config/ui';
 
 export function applyTitle() {
-  document.title = document.title.replace(/^Foundry/, cfg.brand);
+  I18N.setBrand(cfg.brand);
 }
 
 export async function loadRemoteConfig() {
@@ -19,11 +20,11 @@ export async function loadRemoteConfig() {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), 2500);
   try {
-    const res = await fetch(CONFIG_URL + '/public/config/ui', { headers: { Accept: 'application/json' }, signal: ctl.signal });
+    const res = await fetch(CONFIG_URL, { headers: { Accept: 'application/json' }, signal: ctl.signal });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const p = (await res.json()).properties || {};
-    if (p['brand.name']) cfg.brand = p['brand.name'];
-    if (p['currency.symbol']) cfg.currency = p['currency.symbol'];
+    if (p['brand.name'] && String(p['brand.name']).trim()) cfg.brand = String(p['brand.name']).trim();
+    if (p['currency.symbol'] && String(p['currency.symbol']).trim()) cfg.currency = String(p['currency.symbol']).trim();
     cfg.banner = p['banner.text'] || '';
     cfg.footer = p['footer.text'] || '';
     // An address set by hand in config.js wins over the one in the config server.
