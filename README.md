@@ -246,3 +246,10 @@ At the top of `/admin/closed` the admin picks how far ahead members may book: **
 default), **current week only** (Monday to Sunday) or **current month only**. It saves immediately and the page shows the
 dates each option covers. Members see days outside the window as unavailable on their calendar, with an explanation, and the
 backend refuses to book them. The window is relative to today, so it moves on by itself when the week or month changes.
+
+## Link tiles
+
+On the Home page admin page, the type **Link tile** adds a tile that is one big link. Give it a link (required; the editor
+warns while it is empty and the backend answers 400) and a background colour and/or background picture. The title and text
+are optional and sit on the background; the tile lifts with a shadow on hover and opens the link in a new tab. Width,
+height, date limit and the other options work as for any item.

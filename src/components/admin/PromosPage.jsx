@@ -7,7 +7,7 @@ import PromoBoard from '../PromoBoard.jsx';
 import { Field, NewTag, RemovedCard } from './fields.jsx';
 
 const T = (k, p) => I18N.t(k, p);
-const KINDS = ['PHOTO', 'INSTAGRAM', 'PROMO', 'CARD'];
+const KINDS = ['PHOTO', 'INSTAGRAM', 'PROMO', 'CARD', 'TILE'];
 const MAX_IMAGE = 1400000; // characters of the data URL; the server accepts up to 2,000,000
 
 /* A picture chosen by upload or by web address. `field` is the item property, `names` the id parts the tests and labels use. */
@@ -111,12 +111,13 @@ function PromoEditor({ p, index, count }) {
         )}
         <Field label={T('a.promo.link')} id={id('link')} wide>
           <input type="url" id={id('link')} maxLength={500} placeholder="https://" value={p.link} onChange={(e) => set({ link: e.target.value.trim() })} />
+          {p.kind === 'TILE' && <span className={safeLink(p.link) ? 'muted small' : 'err small'} id={id('tile-hint')}>{T('a.promo.tileHint')}</span>}
         </Field>
       </div>
-      <ImageField p={p} field="image" set={set} labels={{ title: 'a.promo.image' }} names={{ file: 'file', url: 'image', remove: 'noimg', err: 'photo-err' }}>
+      {p.kind !== 'TILE' && <ImageField p={p} field="image" set={set} labels={{ title: 'a.promo.image' }} names={{ file: 'file', url: 'image', remove: 'noimg', err: 'photo-err' }}>
         {p.kind === 'INSTAGRAM' && <p className="muted small">{T('a.promo.igHint')}</p>}
         {p.kind === 'INSTAGRAM' && safeLink(p.link) && !instagramRef(p.link) && <p className="err" id={id('ig-bad')} role="alert">{T('a.promo.igBad')}</p>}
-      </ImageField>
+      </ImageField>}
       <div className="fields">
         <Field label={T('a.promo.bgColor')} id={id('bgcolortext')}><ColorField p={p} set={set} id={id} /></Field>
       </div>

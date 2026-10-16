@@ -122,11 +122,25 @@ function InstagramEmbed({ p, post: r, link, sz }) {
   );
 }
 
+/* A link tile: the whole tile is the link, drawn on the admin's background colour or picture. */
+function LinkTile({ p, link, sz }) {
+  return (
+    <a className={'promo promo-tile' + sz.cls + (p.bordered ? '' : ' nob')} style={sz.style} data-kind="TILE" href={link}
+      target="_blank" rel="noopener noreferrer" aria-label={p.title}>
+      {(p.showTitle || p.body) && <span className="promo-body">
+        {p.showTitle && <h3>{p.title}</h3>}
+        {p.body && <span className="tile-text">{p.body}</span>}
+      </span>}
+    </a>
+  );
+}
+
 /* One home page item: an optional photo, a type badge, a title, some text and an optional link. */
 function PromoCard({ p }) {
   if (p.kind === 'CARD') return <AnnouncementCard p={p} sz={tileProps(p)} />;
   const img = safeImage(p.image);
   const link = safeLink(p.link);
+  if (p.kind === 'TILE') return link ? <LinkTile p={p} link={link} sz={tileProps(p)} /> : null;
   const ig = p.kind === 'INSTAGRAM' && instagramRef(link);
   if (ig) return <InstagramEmbed p={p} post={ig} link={link} sz={tileProps(p, true)} />;
   return (
