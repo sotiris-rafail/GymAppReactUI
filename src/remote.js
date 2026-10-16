@@ -7,7 +7,7 @@ export const cfg = { brand: 'Gym', currency: '€', banner: '', footer: '', load
 
 /* The page asks its own server for the settings (/_config/ui). That server holds the client secret, gets a token from the
    config server and reads the settings with it, so the browser never has to be trusted with a credential.
-   Set window.FOUNDRY_CONFIG_URL = '' in config.js to switch this off. */
+   Set FOUNDRY_CONFIG_ENABLED=false in .env to switch this off. */
 const configured = window.FOUNDRY_CONFIG_URL;
 export const CONFIG_URL = configured === '' ? '' : '/_config/ui';
 
@@ -27,7 +27,7 @@ export async function loadRemoteConfig() {
     if (p['currency.symbol'] && String(p['currency.symbol']).trim()) cfg.currency = String(p['currency.symbol']).trim();
     cfg.banner = p['banner.text'] || '';
     cfg.footer = p['footer.text'] || '';
-    // An address set by hand in config.js wins over the one in the config server.
+    // An address set by hand (FOUNDRY_API_BASE in .env) wins over the one in the config server.
     // A localhost address means the visitor's own machine, so it is ignored when the page is opened from another host.
     const base = p['api.base'];
     const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/i.test(base || '');

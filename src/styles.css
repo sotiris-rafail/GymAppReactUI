@@ -325,7 +325,6 @@ body.is-admin .toast-wrap{padding-bottom:calc(88px + env(safe-area-inset-bottom,
 .promos .promo:nth-child(6n+1) .promo-body{padding:24px}
 .promos .promo:nth-child(6n+1){grid-column:span 2;grid-row:span 2}
 .promos .promo:nth-child(6n+4){grid-column:span 2}
-@media (max-width:900px){.promos{grid-template-columns:repeat(2,minmax(0,1fr))}.promos .promo:nth-child(6n+1){grid-row:span 1}}
 @media (max-width:560px){.promos{grid-template-columns:minmax(0,1fr);grid-auto-rows:auto}.promos .promo:nth-child(n){grid-column:auto;grid-row:auto}}
 .promo{display:flex;flex-direction:column;overflow:hidden;border-radius:24px;background:var(--surface);box-shadow:var(--card-ring)}
 .promo-promo{background:var(--pick-bg);color:var(--pick-ink)}
@@ -458,8 +457,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 
 /* tile sizes chosen by the admin (they win over the automatic bento sizes above) */
 .promos{--cols:4}
-@media (max-width:900px){.promos{--cols:2}}
-@media (max-width:560px){.promos{--cols:1}}
+@media (max-width:560px){.promos{--cols:2}}
 .promos .promo.sized-c{grid-column:span min(var(--cs),var(--cols))}
 .promos .promo.sized-r{grid-row:span var(--rs)}
 @media (max-width:560px){.promos .promo.sized-r{grid-row:auto}}
@@ -496,3 +494,18 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 .promo-tile:hover,.promo-tile:focus-visible{transform:translateY(-6px);box-shadow:0 18px 36px -8px rgba(0,0,0,.28)}
 .promo-tile:focus-visible{outline:2px solid var(--edge);outline-offset:3px}
 @media (prefers-reduced-motion:reduce){.promo-tile{transition:box-shadow .2s}.promo-tile:hover,.promo-tile:focus-visible{transform:none}}
+
+/* Square grid: 4 columns on desktop and tablet, 2 on phones. A row is one square cell high (taller only when an item,
+   such as an Instagram post, needs the room), so a 1x1 tile is a true square and a 2x2 tile is a bigger square. */
+.promos-frame{container-type:inline-size}
+.promos{--gap:14px;--cell:calc((100cqw - 3 * var(--gap)) / 4);gap:var(--gap);grid-auto-rows:minmax(170px,auto);grid-auto-rows:minmax(var(--cell),auto)}
+.promo-tile{min-height:0}
+@media (max-width:560px){
+  .promos{grid-template-columns:repeat(2,minmax(0,1fr));--cell:calc((100cqw - var(--gap)) / 2)}
+  .promos .promo:not(.sized-c){grid-column:span 2}
+  .promos .promo.sized-r{grid-row:span var(--rs)}
+  .promos .promo:not(.sized-r){grid-row:auto}
+}
+/* every link tile uses the same text size and padding, whatever its position (the automatic "feature" styling is for other items) */
+.promos .promo.promo-tile:nth-child(n) h3{font-size:18px}
+.promos .promo.promo-tile:nth-child(n) .promo-body{padding:16px}

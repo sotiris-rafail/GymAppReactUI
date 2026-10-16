@@ -5,8 +5,8 @@ talks to it over HTTP.
 
     foundry-gym-ui-react/
       index.html           page shell (Vite entry)
-      vite.config.js       dev server on port 5173
-      public/config.js     where the backend lives (copied as-is into the build)
+      vite.config.js       dev server on port 5173; reads .env and serves /config.js from it
+      .env.example         ALL settings of the UI: copy to .env (there is no config.js)
       src/main.jsx         starts React
       src/App.jsx          header, footer, toast and which screen to show
       src/state.jsx        all app state and actions (login, bookings, admin drafts, save)
@@ -117,6 +117,13 @@ Set these where the UI server runs (defaults in brackets):
     FOUNDRY_CONFIG_URL=http://localhost:8888      (address of the config server)
     CONFIG_CLIENT_ID=ui  CONFIG_CLIENT_SECRET=ui-secret     (must match a client in the config server's cfg.clients)
 
+All of the UI's settings are in one file named `.env` next to `package.json` (copy `.env.example`). There is no
+`config.js`: the UI server reads `.env` and answers the page's `/config.js` request itself with the two non-secret page
+settings, so the client secret never reaches a browser. Order of precedence: real environment variables, then `.env`,
+then the built-in defaults. Restart the UI server after editing `.env`. The settings are `FOUNDRY_CONFIG_URL`,
+`CONFIG_CLIENT_ID`, `CONFIG_CLIENT_SECRET`, `API_PROXY`, `FOUNDRY_API_BASE` and `FOUNDRY_CONFIG_ENABLED`. Because the
+settings are read by the UI server, run the UI with `npm start` or `npm run preview`; a build served as plain static files
+has no server to read `.env` and uses the defaults.
 For example: `CONFIG_CLIENT_SECRET=... npm start`. If this is wrong or the config server is down the page still loads with
 the built-in defaults, and the UI server prints a `[config]` warning. A UI that is only served as static files (no UI
 server) cannot read settings and always uses the defaults. The `ui` settings are the ones the config server marks
@@ -131,8 +138,8 @@ non-secret; they are public by nature, so never put a secret in the `ui` applica
 | `api.base` | address of the gym backend |
 
 If the config server is not running, the UI works with the built-in defaults above and the backend address from
-`public/config.js`. An address set by hand in `config.js` (`FOUNDRY_API_BASE`) wins over `api.base`. Set
-`window.FOUNDRY_CONFIG_URL = ''` in `config.js` to ignore the config server. Changes in the console show up
+`FOUNDRY_API_BASE` from `.env`. An address set by hand there wins over `api.base`. Set
+`FOUNDRY_CONFIG_ENABLED=false` in `.env` to ignore the config server. Changes in the console show up
 the next time the page loads.
 
 Because the browser calls the API with a login cookie, open the UI and the API on the same host name (`localhost` with
@@ -145,9 +152,8 @@ By default the page calls its own address, and the UI server (`npm start`, `npm 
 example on EC2: only port 5173 is open, 8080 is not). No CORS setting or cookie workaround is needed.
 
 - Backend on another port or machine: `API_PROXY=http://127.0.0.1:9090 npm start`
-- Call a backend directly instead (UI hosted elsewhere): uncomment `window.FOUNDRY_API_BASE = 'http://...'` in
-  `public/config.js` (or `dist/config.js` after a build, no rebuild needed). The backend must then allow the UI's address
-  in `GYM_CORS_ORIGINS`, and the UI and API should share a host name so the login cookie sticks.
+- Call a backend directly instead (UI hosted elsewhere): set `FOUNDRY_API_BASE=http://...` in `.env` and restart the UI
+  server. The backend must then allow the UI's address in `GYM_CORS_ORIGINS`, and the UI and API should share a host name so the login cookie sticks.
 - A `localhost` value of `api.base` from the config server is ignored when the page is opened from another host,
   because there `localhost` would mean the visitor's own computer.
 
@@ -253,3 +259,10 @@ On the Home page admin page, the type **Link tile** adds a tile that is one big 
 warns while it is empty and the backend answers 400) and a background colour and/or background picture. The title and text
 are optional and sit on the background; the tile lifts with a shadow on hover and opens the link in a new tab. Width,
 height, date limit and the other options work as for any item.
+
+## Tile grid
+
+The home page grid has 4 equal columns on desktop and tablet (windows 560 px wide or more) and 2 columns on phones.
+A row is one square cell high, so a 1×1 tile is a true square and a 2×2 tile is a larger square. Four 1×1 tiles fill one
+row; two 2×2 tiles fill the next two rows side by side. On a phone the 1×1 tiles pair up and a 2×2 tile is full width.
+Items left on automatic size keep the automatic layout (phones: full width).

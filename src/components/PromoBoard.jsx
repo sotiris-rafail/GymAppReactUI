@@ -158,5 +158,5 @@ function PromoCard({ p }) {
 /* The grid of items. Renders nothing when there are none and no empty text was asked for. */
 export default function PromoBoard({ items, empty }) {
   if (!items.length) return empty ? <p className="muted" id="promo-empty">{empty}</p> : null;
-  return <div className="promos" id="promo-board">{items.map((p) => <PromoCard key={p.id} p={p} />)}</div>;
+  return <div className="promos-frame"><div className="promos" id="promo-board">{items.map((p) => <PromoCard key={p.id} p={p} />)}</div></div>;
 }
