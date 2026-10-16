@@ -248,8 +248,8 @@ fixed when you tick the box (it does not roll over): next week or month starts o
 
 ## Booking window
 
-At the top of `/admin/closed` the admin picks how far ahead members may book: **any day** (the normal booking limit, the
-default), **current week only** (Monday to Sunday) or **current month only**. It saves immediately and the page shows the
+At the top of `/admin/schedule` (the Schedule page) the admin picks how far ahead members may book: **any day** (the normal booking limit, the
+default), **current week only** (Monday to Sunday) or **current month only**. It saves immediately (it is not part of the page's Save changes) and the page shows the
 dates each option covers. Members see days outside the window as unavailable on their calendar, with an explanation, and the
 backend refuses to book them. The window is relative to today, so it moves on by itself when the week or month changes.
 
@@ -266,3 +266,11 @@ The home page grid has 4 equal columns on desktop and tablet (windows 560 px wid
 A row is one square cell high, so a 1×1 tile is a true square and a 2×2 tile is a larger square. Four 1×1 tiles fill one
 row; two 2×2 tiles fill the next two rows side by side. On a phone the 1×1 tiles pair up and a 2×2 tile is full width.
 Items left on automatic size keep the automatic layout (phones: full width).
+
+## Unlimited plans
+
+On the Plans admin page each plan has an **Unlimited visits** tick box. Ticked, the Visits per month field is greyed out
+and the plan has no visit limit. Members on it see "Unlimited visits" on their plan, a monthly counter without a bar or a
+"left" figure, and are never blocked by "No visits left". The Members page and a member's history show "N visits,
+unlimited". Plans that were already there stay limited. A member's history keeps the plan as it was when it was assigned,
+so ticking the box on a plan someone already holds does not rewrite their past (assign the plan again to record it).

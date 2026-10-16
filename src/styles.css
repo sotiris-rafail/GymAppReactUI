@@ -509,3 +509,7 @@ a.btn{display:inline-flex;align-items:center;justify-content:center;text-decorat
 /* every link tile uses the same text size and padding, whatever its position (the automatic "feature" styling is for other items) */
 .promos .promo.promo-tile:nth-child(n) h3{font-size:18px}
 .promos .promo.promo-tile:nth-child(n) .promo-body{padding:16px}
+
+/* the "Unlimited visits" tick box next to a plan's visits field (outside .field, whose labels float) */
+.plan-unlimited{display:flex;align-items:center;flex:0 0 auto}
+.field input:disabled{opacity:.45;cursor:not-allowed}

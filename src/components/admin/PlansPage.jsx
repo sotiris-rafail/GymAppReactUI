@@ -26,8 +26,13 @@ export default function PlansPage() {
                 </div>
               </Field>
               <Field label={T('a.plan.visits')} id={'plan-visits-' + p.id}>
-                <Input id={'plan-visits-' + p.id} type="number" spec={{ min: 0, int: true }} min="0" max="99" step="1" inputMode="numeric" value={p.visits} onValid={(v) => g.editPlan(p.id, { visits: v })} />
+                <Input id={'plan-visits-' + p.id} type="number" spec={{ min: 0, int: true }} min="0" max="99" step="1" inputMode="numeric" value={p.visits} disabled={p.unlimited} onValid={(v) => g.editPlan(p.id, { visits: v })} />
               </Field>
+              <div className="plan-unlimited">
+                <label className="check" htmlFor={'plan-unlimited-' + p.id}>
+                  <input type="checkbox" id={'plan-unlimited-' + p.id} checked={!!p.unlimited} onChange={(e) => g.editPlan(p.id, { unlimited: e.target.checked })} /> {T('a.plan.unlimited')}
+                </label>
+              </div>
               <div className="field end"><button className="btn danger" id={'del-plan-' + p.id} onClick={() => g.removePlan(p.id)}>{T('a.remove')}</button></div>
             </div>
           </div>

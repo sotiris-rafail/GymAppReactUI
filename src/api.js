@@ -23,12 +23,12 @@ export async function api(method, path, body) {
   return data;
 }
 
-export const normPlan = (p) => ({ id: p.id, name: p.name, price: Number(p.price), visits: p.visitsPerMonth });
+export const normPlan = (p) => ({ id: p.id, name: p.name, price: Number(p.price), visits: p.visitsPerMonth, unlimited: !!p.unlimited });
 export const normClass = (c) => ({
   id: c.id, name: c.name, coach: c.coach || '', time: c.startTime, duration: c.durationMinutes,
   capacity: c.capacity, days: c.days.slice().sort((a, b) => a - b),
 });
-export const planBody = (p) => ({ name: p.name, price: p.price, visitsPerMonth: p.visits });
+export const planBody = (p) => ({ name: p.name, price: p.price, visitsPerMonth: p.unlimited ? 0 : p.visits, unlimited: !!p.unlimited });
 export const classBody = (c) => ({
   name: c.name, coach: c.coach, startTime: c.time, durationMinutes: c.duration, capacity: c.capacity, days: c.days,
 });

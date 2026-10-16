@@ -121,7 +121,7 @@ export default function ProfilePage() {
           {!g.isAdmin && (
             <Row label={T('profile.plan')} id="profile-plan">
               {plan
-                ? <><b>{plan.name || T('plan.untitled')}</b> <span className="muted">{T('profile.planLine', { price: money(plan.price), visits: TN('plan.visits', plan.visits) })}</span></>
+                ? <><b>{plan.name || T('plan.untitled')}</b> <span className="muted">{T('profile.planLine', { price: money(plan.price), visits: plan.unlimited ? T('plan.unlimited') : TN('plan.visits', plan.visits) })}</span></>
                 : <span className="muted">{T('profile.noPlan')}</span>}
             </Row>
           )}

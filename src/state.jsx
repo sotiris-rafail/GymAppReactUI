@@ -263,7 +263,7 @@ export function GymProvider({ children }) {
   const editClass = (id, patch) => setClasses((l) => l.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   const addPlan = () => {
     const id = --tmpId.current;
-    setPlans((l) => [...l, { id, name: T('a.plans.new'), price: 39, visits: 6, isNew: true }]);
+    setPlans((l) => [...l, { id, name: T('a.plans.new'), price: 39, visits: 6, unlimited: false, isNew: true }]);
     focusReq.current = 'plan-name-' + id; setFocusTick((n) => n + 1);
   };
   const addClass = () => {

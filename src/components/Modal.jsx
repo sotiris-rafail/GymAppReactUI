@@ -47,7 +47,7 @@ function HistoryDialog({ m }) {
         <ul className="hlist">
           {d.plans.map((p, i) => (
             <li className="hrow" key={i}>
-              <span><b>{p.planName}</b> <span className="muted">{money(Number(p.price))} {T('plan.perMonth')}, {TN('plan.visits', p.visitsPerMonth)}</span></span>
+              <span><b>{p.planName}</b> <span className="muted">{money(Number(p.price))} {T('plan.perMonth')}, {p.unlimited ? T('plan.unlimited') : TN('plan.visits', p.visitsPerMonth)}</span></span>
               <span className="hdates">{fmtDate(p.from)} &ndash; {!p.to ? <span className="pill accent">{T('a.hist.active')}</span> : fmtDate(p.to)}</span>
             </li>
           ))}
@@ -58,7 +58,7 @@ function HistoryDialog({ m }) {
         {d.months.map((x) => (
           <li className="hrow" key={x.month}>
             <span><b>{monthLabel(x.month)}</b> <span className="muted">{x.planName != null ? x.planName : T('a.hist.noPlanMonth')}</span></span>
-            <span className="hv">{x.visitsPerMonth != null ? T('a.hist.usedOf', { used: x.visits, total: x.visitsPerMonth }) : TN('a.hist.visitsUsed', x.visits)}</span>
+            <span className="hv">{x.unlimited ? T('a.hist.usedUnlimited', { used: x.visits }) : x.visitsPerMonth != null ? T('a.hist.usedOf', { used: x.visits, total: x.visitsPerMonth }) : TN('a.hist.visitsUsed', x.visits)}</span>
           </li>
         ))}
       </ul>

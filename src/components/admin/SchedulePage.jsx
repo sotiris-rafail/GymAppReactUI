@@ -3,6 +3,7 @@ import { I18N } from '../../i18n.js';
 import { useGym } from '../../state.jsx';
 import { dayNames, key, isoDay, isSundayKey, TODAY_K } from '../../util.js';
 import { Field, Input, TimeField, NewTag, RemovedCard } from './fields.jsx';
+import BookingWindow from './BookingWindow.jsx';
 
 const T = (k, p) => I18N.t(k, p);
 
@@ -96,6 +97,7 @@ export default function SchedulePage() {
   const g = useGym();
   return (
     <>
+      <BookingWindow />
       <section aria-label={T('a.classes.aria')}>
         <div className="sec-h"><div><h2>{T('a.classes.title')}</h2><p className="sub">{T('a.classes.sub')}</p></div></div>
         <div className="stack">

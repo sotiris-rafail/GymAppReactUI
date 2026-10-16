@@ -54,7 +54,7 @@ export default function MembersPage() {
                 <span><b>{m.name}</b> <span className="muted">{m.email}</span></span>
                 <span className="massign">
                   <button className="btn ghost small" id={'hist-' + m.id} onClick={() => g.openHistory(m.id)}>{T('a.hist.btn')}</button>
-                  {m.planName != null && <span className="muted">{T('a.members.visits', { used: m.visitsUsedThisMonth, total: m.visitsPerMonth })}</span>}
+                  {m.planName != null && <span className="muted">{m.unlimited ? T('a.members.visitsUnlimited', { used: m.visitsUsedThisMonth }) : T('a.members.visits', { used: m.visitsUsedThisMonth, total: m.visitsPerMonth })}</span>}
                   <select className={'plansel' + (changed ? ' changed' : '')} id={'mplan-' + m.id} value={cur == null ? '' : String(cur)}
                     aria-label={T('a.members.planFor', { name: m.name })}
                     onChange={(e) => g.choosePlan(m.id, e.target.value === '' ? null : Number(e.target.value))}>

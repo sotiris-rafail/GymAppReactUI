@@ -11,7 +11,7 @@ function Plan({ plan }) {
     <div className="plan-pick on" id="my-plan">
       <span className="pp-name">{plan.name || T('plan.untitled')}</span>
       <span className="pp-price"><b>{money(plan.price)}</b> {T('plan.perMonth')}</span>
-      <span className="pp-visits">{TN('plan.visits', plan.visits)}</span>
+      <span className="pp-visits">{plan.unlimited ? T('plan.unlimited') : TN('plan.visits', plan.visits)}</span>
       <span className="pill accent">{T('plan.yours')}</span>
     </div>
   ) : <p className="muted" id="no-plan">{T('plan.none')}</p>;
@@ -19,6 +19,17 @@ function Plan({ plan }) {
 
 function Meter({ plan, mine, att, bk, cy, cm }) {
   if (!plan) return <div className="usage"><span className="muted">{T('plan.pickToStart')}</span></div>;
+  if (plan.unlimited) {
+    return (
+      <div className="usage">
+        <div className="usage-h"><strong>{I18N.month(cm)} {cy}</strong><span id="usage-unlimited">{T('plan.usedUnlimited', { used: mine.length })}</span></div>
+        <div className="legend">
+          <span><i className="sw att" />{T('plan.attended', { n: att })}</span>
+          <span><i className="sw bk" />{T('plan.booked', { n: bk })}</span>
+        </div>
+      </div>
+    );
+  }
   const total = plan.visits, left = Math.max(0, total - mine.length);
   let bar = null;
   if (total > 0 && total <= 40) {
@@ -114,7 +125,7 @@ function SessionRow({ s, plan, used }) {
   else if (past) action = <span className="muted">{T('row.ended')}</span>;
   else if (!plan) action = <button className="btn" id={id} disabled>{T('row.choosePlan')}</button>;
   else if (left === 0) action = <button className="btn" id={id} disabled>{T('row.full')}</button>;
-  else if (used >= plan.visits) action = <button className="btn" id={id} disabled>{T('row.noVisits')}</button>;
+  else if (!plan.unlimited && used >= plan.visits) action = <button className="btn" id={id} disabled>{T('row.noVisits')}</button>;
   else action = <button className="btn" id={id} onClick={() => g.run(() => g.book(s.classId, s.date, s))}>{T('row.book')}</button>;
   return (
     <div className="row">
@@ -140,7 +151,7 @@ function DayPanel({ plan }) {
   const prefix = sel.slice(0, 7);
   const used = g.bookings.filter((b) => b.date.indexOf(prefix) === 0).length;
   const closed = closedInfo(g.closedDays, sel, g.bookingWindow);
-  const blocked = !closed && plan && used >= plan.visits && sel >= TODAY_K;
+  const blocked = !closed && plan && !plan.unlimited && used >= plan.visits && sel >= TODAY_K;
   return (
     <section className="panel" id="day-panel" aria-label={T('day.aria')}>
       <div className="day-h"><h2>{label(sel)}</h2><p className="sub">{closed ? T('cal.closed') : ss.length ? TN('cal.cls', ss.length) : T('day.none')}</p></div>

@@ -11,13 +11,14 @@ const line = (label, from, to) => ({ label, from: String(from), to: String(to) }
 export function planChanges(plans, base) {
   const out = [];
   plans.forEach((p) => {
-    if (p.isNew) { out.push({ kind: 'add', title: p.name || T('plan.untitled'), lines: [{ text: money(p.price) + ' ' + T('plan.perMonth') + ', ' + TN('plan.visits', p.visits) }] }); return; }
+    if (p.isNew) { out.push({ kind: 'add', title: p.name || T('plan.untitled'), lines: [{ text: money(p.price) + ' ' + T('plan.perMonth') + ', ' + (p.unlimited ? T('plan.unlimited') : TN('plan.visits', p.visits)) }] }); return; }
     const b = base.find((x) => x.id === p.id); if (!b) return;
     if (p.removed) { out.push({ kind: 'remove', title: b.name || T('plan.untitled'), lines: [{ text: T('chg.planRemoved') }] }); return; }
     const l = [];
     if (p.name !== b.name) l.push(line(T('a.plan.name'), cv(b.name), cv(p.name)));
     if (p.price !== b.price) l.push(line(T('a.plan.price'), money(b.price), money(p.price)));
-    if (p.visits !== b.visits) l.push(line(T('a.plan.visits'), b.visits, p.visits));
+    if (!!p.unlimited !== !!b.unlimited) l.push(line(T('a.plan.visits'), b.unlimited ? T('plan.unlimited') : b.visits, p.unlimited ? T('plan.unlimited') : p.visits));
+    else if (!p.unlimited && p.visits !== b.visits) l.push(line(T('a.plan.visits'), b.visits, p.visits));
     if (l.length) out.push({ kind: 'edit', title: b.name || T('plan.untitled'), lines: l });
   });
   return out;
@@ -97,7 +98,7 @@ export function changesFor(page, d) {
   return [];
 }
 
-export const planDiffers = (p, b) => p.name !== b.name || p.price !== b.price || p.visits !== b.visits;
+export const planDiffers = (p, b) => p.name !== b.name || p.price !== b.price || !!p.unlimited !== !!b.unlimited || (!p.unlimited && p.visits !== b.visits);
 export const classDiffers = (c, b) =>
   c.name !== b.name || c.coach !== b.coach || c.time !== b.time || c.duration !== b.duration ||
   c.capacity !== b.capacity || c.days.join() !== b.days.join();
