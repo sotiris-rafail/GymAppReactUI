@@ -1,7 +1,7 @@
 import { I18N } from '../i18n.js';
 import { useGym } from '../state.jsx';
 import PromoBoard from './PromoBoard.jsx';
-import { p2, money, startOf, label, shortLabel, toneOf, dayNames, parseKey, TODAY_K, isSundayKey, isLive } from '../util.js';
+import { p2, money, startOf, label, shortLabel, toneOf, dayNames, parseKey, TODAY_K, isSundayKey, isLive, inBookingWindow } from '../util.js';
 
 const T = (k, p) => I18N.t(k, p);
 const TN = (k, n, p) => I18N.tn(k, n, p);
@@ -41,8 +41,9 @@ function Meter({ plan, mine, att, bk, cy, cm }) {
 }
 
 /* null when open; otherwise the reason text: Sundays are always closed, other dates are closed by the admin */
-function closedInfo(list, k) {
+function closedInfo(list, k, mode) {
   if (isSundayKey(k)) return T('cal.sunday');
+  if (!inBookingWindow(k, mode)) return T('cal.outside.' + mode);
   const c = list.find((x) => x.date === k);
   return c ? (c.reason || T('cal.closed')) : null;
 }
@@ -57,7 +58,7 @@ function Calendar() {
     const k = cy + '-' + p2(cm + 1) + '-' + p2(d);
     const ss = g.sessions[k] || [];
     const mineDay = ss.some((s) => s.mine);
-    const closed = closedInfo(g.closedDays, k);
+    const closed = closedInfo(g.closedDays, k, g.bookingWindow);
     const cls = ['cell'];
     if (closed) cls.push('closed');
     if (k < TODAY_K) cls.push('past');
@@ -138,13 +139,13 @@ function DayPanel({ plan }) {
   const ss = g.sessions[sel] || [];
   const prefix = sel.slice(0, 7);
   const used = g.bookings.filter((b) => b.date.indexOf(prefix) === 0).length;
-  const closed = closedInfo(g.closedDays, sel);
+  const closed = closedInfo(g.closedDays, sel, g.bookingWindow);
   const blocked = !closed && plan && used >= plan.visits && sel >= TODAY_K;
   return (
     <section className="panel" id="day-panel" aria-label={T('day.aria')}>
       <div className="day-h"><h2>{label(sel)}</h2><p className="sub">{closed ? T('cal.closed') : ss.length ? TN('cal.cls', ss.length) : T('day.none')}</p></div>
       {blocked && <p className="note">{T('day.blocked', { n: plan.visits, plan: plan.name || T('day.yourPlan'), month: I18N.month(parseKey(sel).getMonth()) })}</p>}
-      {closed ? <p className="empty" id="day-closed">{(isSundayKey(sel) ? T('day.closedSunday') : T('day.closed', { why: closed }))}</p> : !ss.length ? <p className="empty">{T('day.pick')}</p> : ss.map((s) => <SessionRow key={s.classId + s.date} s={s} plan={plan} used={used} />)}
+      {closed ? <p className="empty" id="day-closed">{(isSundayKey(sel) ? T('day.closedSunday') : !inBookingWindow(sel, g.bookingWindow) ? T('day.outside.' + g.bookingWindow) : T('day.closed', { why: closed }))}</p> : !ss.length ? <p className="empty">{T('day.pick')}</p> : ss.map((s) => <SessionRow key={s.classId + s.date} s={s} plan={plan} used={used} />)}
     </section>
   );
 }

@@ -71,7 +71,7 @@ in get the login form and land on the page they asked for):
   visits used in each month), and **Class attendance** for the current month: every class with who is booked on which
   date (sessions that have already happened show as attended).
 * `/admin/home`: the home page items (photos, Instagram posts, offers and announcement cards).
-* `/admin/closed`: days with no classes (see below).
+* `/admin/closed`: days with no classes, and closing a whole week or month (see below).
 
 When the site is served by a static host, the host must return `index.html` for unknown paths such as `/admin/plans`
 (`vite dev` and `vite preview` already do).
@@ -232,3 +232,17 @@ The tile **Size** is typed as numbers: width 1 to 4 columns and height 1 to 8 ro
 nearest one; leave a box empty for automatic). Each item can also have a **Background colour** (colour picker or `#rrggbb`;
 the text turns black or white to stay readable) and a **Background picture** behind the whole tile (upload or web address;
 a dark fade keeps the text readable). The photo at the top of a tile and the background picture are independent.
+
+## Closing the current week or month
+
+At the top of `/admin/closed` two check boxes, **Close the current week** (Monday to Sunday) and **Close the current month**,
+stop members booking any class in that period. They save immediately, show the period they apply to, and un-ticking one opens
+bookings again. Members see those days as closed on their calendar. Bookings that already exist are kept. The period is
+fixed when you tick the box (it does not roll over): next week or month starts open.
+
+## Booking window
+
+At the top of `/admin/closed` the admin picks how far ahead members may book: **any day** (the normal booking limit, the
+default), **current week only** (Monday to Sunday) or **current month only**. It saves immediately and the page shows the
+dates each option covers. Members see days outside the window as unavailable on their calendar, with an explanation, and the
+backend refuses to book them. The window is relative to today, so it moves on by itself when the week or month changes.

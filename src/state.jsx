@@ -44,6 +44,8 @@ export function GymProvider({ children }) {
   const [members, setMembers] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [closedDays, setClosedDays] = useState([]); // [{date, reason}] closed by the admin; Sundays are always closed
+  const [bookingWindow, setBookingWindow] = useState('ANY'); // ANY | WEEK | MONTH: how far ahead members may book
+  const [closedPeriods, setClosedPeriods] = useState([]); // [{kind: WEEK|MONTH, from, to}] weeks/months closed for bookings (admin)
   const [openClasses, setOpenClasses] = useState({});
   const [cal, setCal] = useState({ cy: TODAY.getFullYear(), cm: TODAY.getMonth(), sel: TODAY_K });
 
@@ -95,23 +97,25 @@ export function GymProvider({ children }) {
     setSessions(map);
   }, []);
   const loadClosed = useCallback(async () => { setClosedDays((await api('GET', '/api/closed-days')) || []); }, []);
+  const loadWindow = useCallback(async () => { const w = await api('GET', '/api/booking-window'); setBookingWindow((w && w.mode) || 'ANY'); }, []);
   const loadMemberData = useCallback(async (cy, cm) => {
-    const r = await Promise.all([api('GET', '/api/me/bookings'), loadSessions(cy, cm), loadClosed().catch(() => {})]);
+    const r = await Promise.all([api('GET', '/api/me/bookings'), loadSessions(cy, cm), loadClosed().catch(() => {}), loadWindow().catch(() => {})]);
     setBookings(r[0]);
-  }, [loadSessions, loadClosed]);
+  }, [loadSessions, loadClosed, loadWindow]);
   const loadMembers = useCallback(async () => { const m = await api('GET', '/api/admin/members'); setMembers(m); return m; }, []);
   const loadAttendance = useCallback(async () => { setAttendance(await api('GET', '/api/admin/attendance')); }, []);
   const loadAll = useCallback(async (user, cy, cm) => {
     await loadCatalog();
     await loadPromos(user.role === 'ADMIN').catch(() => {}); // the home page items never block a login
     await loadClosed().catch(() => {});
+    await loadWindow().catch(() => {});
     if (user.role === 'MEMBER') await loadMemberData(cy, cm);
-    else await Promise.all([loadMembers(), loadAttendance()]);
-  }, [loadCatalog, loadPromos, loadClosed, loadMemberData, loadMembers, loadAttendance]);
+    else await Promise.all([loadMembers(), loadAttendance(), api('GET', '/api/admin/closed-periods').then(setClosedPeriods).catch(() => {})]);
+  }, [loadCatalog, loadPromos, loadClosed, loadWindow, loadMemberData, loadMembers, loadAttendance]);
 
   const clearData = useCallback(() => {
     setPlans([]); setBasePlans([]); setClasses([]); setBaseClasses([]); setPending({});
-    setBookings([]); setSessions({}); setMembers([]); setAttendance([]); setPromos([]); setBasePromos([]); setClosedDays([]);
+    setBookings([]); setSessions({}); setMembers([]); setAttendance([]); setPromos([]); setBasePromos([]); setClosedDays([]); setClosedPeriods([]); setBookingWindow('ANY');
   }, []);
 
   /* ---------- errors and busy guard ---------- */
@@ -315,6 +319,17 @@ export function GymProvider({ children }) {
     await loadClosed();
     toast(T('a.closed.added', { date: shortLabel(date) }));
   }, [loadClosed, toast]);
+  /* Closes or opens bookings for the current week or month; saved straight away. */
+  const setPeriodClosed = useCallback(async (kind, closed) => {
+    setClosedPeriods(await api('PUT', '/api/admin/closed-periods/' + kind, { closed }));
+    await loadClosed();
+    toast(T(closed ? 'a.period.closedToast.' + kind : 'a.period.openedToast.' + kind));
+  }, [loadClosed, toast]);
+  const changeWindow = useCallback(async (mode) => {
+    const w = await api('PUT', '/api/admin/booking-window', { mode });
+    setBookingWindow((w && w.mode) || mode);
+    toast(T('a.window.saved'));
+  }, [toast]);
   const removeClosed = useCallback(async (date) => {
     await api('DELETE', '/api/admin/closed-days/' + date);
     await loadClosed();
@@ -464,7 +479,7 @@ export function GymProvider({ children }) {
     lang, theme, setLang, toggleTheme,
     auth, booting, fatalErr, toastState, toast, modal, setModal, closeModal,
     loginRole, setLoginRole, registering, setRegistering, showLogin, setShowLogin, path, onProfile, navigate,
-    closedDays, addClosed, removeClosed,
+    closedDays, addClosed, removeClosed, closedPeriods, setPeriodClosed, bookingWindow, changeWindow,
     promos, basePromos, editPromo, addPromo, removePromo, undoPromo, movePromo,
     bookings, sessions, members, attendance, openClasses, toggleOpenClass, cal, pickDay,
     plans, basePlans, classes, baseClasses, pending, page, changes, dirtyCount, dirtyAny, isAdmin,

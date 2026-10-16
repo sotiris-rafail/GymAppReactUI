@@ -68,6 +68,17 @@ export function instagramRef(u) {
 export const isLive = (p) => p.active && (!p.hideOn || p.hideOn > TODAY_K);
 export const addDaysKey = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return key(d); };
 
+/* Is this date inside the booking window the admin chose? ANY = no extra limit, WEEK = this Monday to Sunday, MONTH = this calendar month */
+export function inBookingWindow(k, mode) {
+  if (mode === 'MONTH') return k.slice(0, 7) === TODAY_K.slice(0, 7);
+  if (mode === 'WEEK') {
+    const mon = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() - ((TODAY.getDay() + 6) % 7));
+    const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6);
+    return k >= key(mon) && k <= key(sun);
+  }
+  return true;
+}
+
 export const safeLink = (u) => (/^https?:\/\/\S+$/i.test(u || '') ? u : '');
 export const safeImage = (u) => (/^(https?:\/\/\S+|data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+)$/i.test(u || '') ? u : '');
 
