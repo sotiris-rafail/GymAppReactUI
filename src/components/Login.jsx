@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { I18N } from '../i18n.js';
 import { api } from '../api.js';
 import { useGym } from '../state.jsx';
-import { DEMO } from '../util.js';
 
 const T = (k, p) => I18N.t(k, p);
 
@@ -18,7 +17,6 @@ function LoginForm({ isAdmin, reg }) {
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false); // signing in: the button shows it until the data is loaded
-  const d = isAdmin ? DEMO.ADMIN : DEMO.MEMBER;
 
   const submit = (e) => {
     e.preventDefault();
@@ -54,11 +52,6 @@ function LoginForm({ isAdmin, reg }) {
         <p className="sr-only" role="status">{busy ? T('loading') : ''}</p>
         {!isAdmin && <button type="button" className="linkbtn" id="toggle-reg" onClick={() => g.setRegistering(!reg)}>{reg ? T('login.toLogin') : T('login.toReg')}</button>}
       </form>
-      <div className="hint">
-        {T(isAdmin ? 'login.demoAdmin' : 'login.demoMember')} <code>{d.email}</code> / <code>{d.password}</code>{' '}
-        <button type="button" className="linkbtn" id="demo-fill" style={{ display: 'inline' }}
-          onClick={() => { setEmail(d.email); setPw(d.password); }}>{T('login.fill')}</button>
-      </div>
     </>
   );
 }

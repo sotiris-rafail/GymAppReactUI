@@ -93,7 +93,11 @@ export default function MarketingPage() {
     const [l, s] = await Promise.all([api('GET', '/api/admin/marketing'), api('GET', '/api/admin/marketing/status')]);
     setList(l || []); setStatus(s || { mailEnabled: false, optedIn: 0 }); setLoaded(true);
   }, []);
-  useEffect(() => { g.run(load); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const on = g.features.marketing;
+  useEffect(() => { g.refreshFeatures(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { // 404 = switched off in the config server
+    if (on) g.run(async () => { try { await load(); } catch (e) { if (e.status === 404) { g.refreshFeatures(); return; } throw e; } });
+  }, [on]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* every action ends by reloading the list, so the delivery counts are always the server's */
   const act = async (fn) => {
@@ -116,6 +120,14 @@ export default function MarketingPage() {
 
   const drafts = list.filter((c) => c.status === 'DRAFT');
   const sentList = list.filter((c) => c.status === 'SENT');
+  if (!on) {
+    return (
+      <section aria-label={T('a.mk.aria')}>
+        <div className="sec-h"><div><h2>{T('a.mk.title')}</h2></div></div>
+        <p className="err" id="mk-disabled" role="alert">{T('a.mk.disabled')}</p>
+      </section>
+    );
+  }
   return (
     <section aria-label={T('a.mk.aria')}>
       <div className="sec-h"><div><h2>{T('a.mk.title')}</h2><p className="sub">{T('a.mk.sub')}</p></div></div>

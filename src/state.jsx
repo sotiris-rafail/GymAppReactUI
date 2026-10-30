@@ -44,7 +44,7 @@ export function GymProvider({ children }) {
   const [members, setMembers] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [closedDays, setClosedDays] = useState([]); // [{date, reason}] closed by the admin; Sundays are always closed
-  const [features, setFeatures] = useState({ unlimitedPlans: true, mail: false, analytics: true, home: true, multiGym: false }); // switches the config server controls (unlimited plans on = the default; mail is on only when the backend can send email)
+  const [features, setFeatures] = useState({ unlimitedPlans: true, mail: false, analytics: true, marketing: true, home: true, multiGym: false }); // switches the config server controls (unlimited plans on = the default; mail is on only when the backend can send email)
   const [gyms, setGyms] = useState([]); // the gyms people can choose from [{id,name,address,status,isDefault}]; empty while one gym is in use
   const [gymCount, setGymCount] = useState(1); // how many gyms exist (admin); the Gyms page stays reachable while several gyms are switched off but more than one exists
   const [gymId, setGymId] = useState(null); // the gym being looked at (admin: the one being managed; member: where they train)
@@ -149,7 +149,7 @@ export function GymProvider({ children }) {
   const multiOn = useRef(false);
   const loadFeatures = useCallback(async () => {
     const f = await api('GET', '/api/features');
-    const next = { unlimitedPlans: !f || f.unlimitedPlans !== false, mail: !!(f && f.mail), analytics: !f || f.analytics !== false, home: !f || f.home !== false, multiGym: !!(f && f.multiGym) };
+    const next = { unlimitedPlans: !f || f.unlimitedPlans !== false, mail: !!(f && f.mail), analytics: !f || f.analytics !== false, marketing: !f || f.marketing !== false, home: !f || f.home !== false, multiGym: !!(f && f.multiGym) };
     const multiChanged = next.multiGym !== multiOn.current;
     multiOn.current = next.multiGym;
     setFeatures(next);
@@ -383,6 +383,8 @@ export function GymProvider({ children }) {
     else setPending({});
   };
   /* Closed days are saved the moment the admin adds or removes one. */
+  /* How many bookings closing these dates would cancel (nothing is changed). */
+  const closureImpact = useCallback(async (from, to) => (await api('GET', '/api/admin/closed-days/impact?from=' + from + '&to=' + to)) || { bookings: 0, members: 0 }, []);
   const addClosed = useCallback(async (date, reason) => {
     await api('POST', '/api/admin/closed-days', { date, reason: reason || '' });
     await loadClosed();
@@ -571,7 +573,7 @@ export function GymProvider({ children }) {
     lang, theme, setLang, toggleTheme,
     auth, booting, fatalErr, toastState, toast, modal, setModal, closeModal,
     loginRole, setLoginRole, registering, setRegistering, showLogin, setShowLogin, path, onProfile, navigate,
-    gyms, gymId, gymCount, setGym, setMemberGym, refreshGyms: () => loadGyms(R.current.auth).catch(() => {}), closedDays, addClosed, removeClosed, closedPeriods, setPeriodClosed, bookingWindow, bookingLimit, changeWindow, features, refreshFeatures,
+    gyms, gymId, gymCount, setGym, setMemberGym, refreshGyms: () => loadGyms(R.current.auth).catch(() => {}), closedDays, addClosed, removeClosed, closureImpact, closedPeriods, setPeriodClosed, bookingWindow, bookingLimit, changeWindow, features, refreshFeatures,
     promos, basePromos, editPromo, addPromo, removePromo, undoPromo, movePromo,
     bookings, sessions, members, attendance, openClasses, toggleOpenClass, cal, pickDay,
     plans, basePlans, classes, baseClasses, pending, page, changes, dirtyCount, dirtyAny, isAdmin,

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { I18N } from '../../i18n.js';
 import { useGym } from '../../state.jsx';
 import { Field } from './fields.jsx';
-import { TODAY_K, label, isSundayKey } from '../../util.js';
+import { TODAY, TODAY_K, key, label, isSundayKey } from '../../util.js';
 import { currentRanges } from './BookingWindow.jsx';
 
 const T = (k, p) => I18N.t(k, p);
@@ -20,10 +20,23 @@ export default function ClosedPage() {
   const saved = (kind) => g.closedPeriods.some((p) => p.kind === kind && p.from <= TODAY_K && TODAY_K <= p.to);
   const [pending, setPending] = useState({}); // shows the new state at once while the server saves it
   const isClosed = (kind) => (kind in pending ? pending[kind] : saved(kind));
+  /* Closing cancels the bookings already made for those days, so the admin is told how many first. */
+  const sure = async (from, to, what) => {
+    const im = await g.closureImpact(from, to);
+    return im.bookings === 0 || window.confirm(T('a.closed.confirm', { what, n: im.bookings, m: im.members }));
+  };
+  const rangeOf = (kind) => {
+    const mon = new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() - ((TODAY.getDay() + 6) % 7));
+    return kind === 'WEEK' ? [key(mon), key(new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6))]
+      : [key(new Date(TODAY.getFullYear(), TODAY.getMonth(), 1)), key(new Date(TODAY.getFullYear(), TODAY.getMonth() + 1, 0))];
+  };
   const toggle = (kind) => {
     const want = !isClosed(kind);
     setPending((x) => ({ ...x, [kind]: want }));
-    g.run(() => g.setPeriodClosed(kind, want)).finally(() => setPending((x) => { const { [kind]: _drop, ...rest } = x; return rest; }));
+    g.run(async () => {
+      if (want) { const [f, t] = rangeOf(kind); if (!(await sure(f, t, ranges[kind]))) return; }
+      await g.setPeriodClosed(kind, want);
+    }).finally(() => setPending((x) => { const { [kind]: _drop, ...rest } = x; return rest; }));
   };
 
   const add = (e) => {
@@ -32,7 +45,10 @@ export default function ClosedPage() {
     if (isSundayKey(date)) { setErr(T('a.closed.sunday')); return; }
     setErr('');
     g.run(async () => {
-      try { await g.addClosed(date, reason.trim()); setDate(''); setReason(''); }
+      try {
+        if (!(await sure(date, date, label(date)))) return;
+        await g.addClosed(date, reason.trim()); setDate(''); setReason('');
+      }
       catch (er) { if (er.status === 401) throw er; setErr(er.message); }
     });
   };

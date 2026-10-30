@@ -51,7 +51,7 @@ export default function AdminView() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
           </button>
         </div>
-        {ADMIN_NAV_PAGES.filter((k) => (k !== 'analytics' || g.features.analytics) && (k !== 'promos' || g.features.home) && (k !== 'gyms' || g.features.multiGym || g.gymCount > 1 || g.page === 'gyms')).map((k) => {
+        {ADMIN_NAV_PAGES.filter((k) => (k !== 'analytics' || g.features.analytics) && (k !== 'marketing' || g.features.marketing || g.page === 'marketing') && (k !== 'promos' || g.features.home) && (k !== 'gyms' || g.features.multiGym || g.gymCount > 1 || g.page === 'gyms')).map((k) => {
           const dirty = g.dirtyCount(k) > 0;
           return (
             <a key={k} className={'sidelink' + (dirty ? ' dirty' : '')} id={'tab-' + k} href={adminUrl(k)} onClick={go(adminUrl(k))}
