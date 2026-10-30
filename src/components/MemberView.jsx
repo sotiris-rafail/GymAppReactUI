@@ -52,9 +52,10 @@ function Meter({ plan, mine, att, bk, cy, cm }) {
 }
 
 /* null when open; otherwise the reason text: Sundays are always closed, other dates are closed by the admin */
-function closedInfo(list, k, mode) {
+function closedInfo(list, k, mode, last) {
   if (isSundayKey(k)) return T('cal.sunday');
   if (!inBookingWindow(k, mode)) return T('cal.outside.' + mode);
+  if (last && k > last) return T('cal.outside.HORIZON'); // beyond the booking horizon
   const c = list.find((x) => x.date === k);
   return c ? (c.reason || T('cal.closed')) : null;
 }
@@ -69,7 +70,7 @@ function Calendar() {
     const k = cy + '-' + p2(cm + 1) + '-' + p2(d);
     const ss = g.sessions[k] || [];
     const mineDay = ss.some((s) => s.mine);
-    const closed = closedInfo(g.closedDays, k, g.bookingWindow);
+    const closed = closedInfo(g.closedDays, k, g.bookingWindow, g.bookingLimit.lastBookable);
     const cls = ['cell'];
     if (closed) cls.push('closed');
     if (k < TODAY_K) cls.push('past');
@@ -150,13 +151,16 @@ function DayPanel({ plan }) {
   const ss = g.sessions[sel] || [];
   const prefix = sel.slice(0, 7);
   const used = g.bookings.filter((b) => b.date.indexOf(prefix) === 0).length;
-  const closed = closedInfo(g.closedDays, sel, g.bookingWindow);
+  const closed = closedInfo(g.closedDays, sel, g.bookingWindow, g.bookingLimit.lastBookable);
+  const nowD = new Date();
+  const next = g.bookings.find((b) => startOf(b.date, b.startTime) >= nowD);
   const blocked = !closed && plan && !plan.unlimited && used >= plan.visits && sel >= TODAY_K;
   return (
     <section className="panel" id="day-panel" aria-label={T('day.aria')}>
       <div className="day-h"><h2>{label(sel)}</h2><p className="sub">{closed ? T('cal.closed') : ss.length ? TN('cal.cls', ss.length) : T('day.none')}</p></div>
       {blocked && <p className="note">{T('day.blocked', { n: plan.visits, plan: plan.name || T('day.yourPlan'), month: I18N.month(parseKey(sel).getMonth()) })}</p>}
-      {closed ? <p className="empty" id="day-closed">{(isSundayKey(sel) ? T('day.closedSunday') : !inBookingWindow(sel, g.bookingWindow) ? T('day.outside.' + g.bookingWindow) : T('day.closed', { why: closed }))}</p> : !ss.length ? <p className="empty">{T('day.pick')}</p> : ss.map((s) => <SessionRow key={s.classId + s.date} s={s} plan={plan} used={used} />)}
+      {closed ? <p className="empty" id="day-closed">{(isSundayKey(sel) ? T('day.closedSunday') : !inBookingWindow(sel, g.bookingWindow) ? T('day.outside.' + g.bookingWindow) : (g.bookingLimit.lastBookable && sel > g.bookingLimit.lastBookable) ? T('day.outside.HORIZON', { date: label(g.bookingLimit.lastBookable), n: g.bookingLimit.horizonDays }) : T('day.closed', { why: closed }))}</p> : !ss.length ? <p className="empty">{T('day.pick')}</p> : ss.map((s) => <SessionRow key={s.classId + s.date} s={s} plan={plan} used={used} />)}
+      {next && <p className="nextup" id="next-up">{T('day.next', { when: shortLabel(next.date) + ', ' + next.startTime, what: (next.className || T('row.untitled')) + (next.gymName && (g.features.multiGym || !next.defaultGym) ? ' · ' + next.gymName : '') })}</p>}
     </section>
   );
 }
@@ -172,13 +176,14 @@ function Upcoming() {
         <div className="mylist">
           {list.map((b) => (
             <div className="mrow" key={b.id}>
-              <span><b>{shortLabel(b.date)}, {b.startTime}</b> {b.className || T('row.untitled')}</span>
+              <span><b>{shortLabel(b.date)}, {b.startTime}</b> {b.className || T('row.untitled')}{b.gymName && (g.features.multiGym || !b.defaultGym) ? <span className="muted"> · {b.gymName}</span> : null}</span>
               <button className="btn ghost" id={'up-' + b.id} onClick={() => g.run(() => g.cancelBooking(b.id))}>{T('row.cancel')}</button>
             </div>
           ))}
         </div>
       ) : <p className="muted">{T('up.none')}</p>}
       {list.length > 0 && <p className="sub">{T('up.hint')}</p>}
+      {!g.features.multiGym && list.some((b) => !b.defaultGym) && <p className="note" id="other-gym-note">{T('gym.otherNote')}</p>}
     </section>
   );
 }
@@ -194,7 +199,7 @@ export default function MemberView() {
   return (
     <div className="page">
       <section aria-label={T('plan.section')}>
-        <div className="sec-h"><div><h2>{T('plan.section')}</h2><p className="sub">{T('plan.sub')}</p></div></div>
+        <div className="sec-h sr-only"><div><h2>{T('plan.section')}</h2><p className="sub">{T('plan.sub')}</p></div></div>
         <div className="plans single"><Plan plan={plan} /></div>
         <Meter plan={plan} mine={mine} att={att} bk={mine.length - att} cy={cy} cm={cm} />
       </section>

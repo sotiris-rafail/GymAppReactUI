@@ -1,3 +1,4 @@
+import GymPicker from './components/GymPicker.jsx';
 import { I18N } from './i18n.js';
 import { API_BASE } from './api.js';
 import { useGym } from './state.jsx';
@@ -19,6 +20,7 @@ function Header() {
   return (
     <header className="top">
       <div className="brand">{cfg.brand}<small>{T('tagline')}</small></div>
+      {g.auth && !g.isAdmin && !g.onProfile && <GymPicker inline />}
       <div className="who">
         {!g.auth && !g.booting && !g.fatalErr && (
           <button className="btn" id="open-login" onClick={() => g.setShowLogin(true)}>{T('home.login')}</button>
@@ -48,7 +50,7 @@ function Header() {
 export default function App() {
   const g = useGym();
   let body;
-  if (g.booting) body = <p className="muted status">{T('loading')}</p>;
+  if (g.booting) body = <p className="muted status" role="status"><span className="spinner" aria-hidden="true" />{T('loading')}</p>;
   else if (g.fatalErr) body = <div className="note status">{T('fatal', { url: API_BASE, reason: g.fatalErr.message || T('networkError') })}</div>;
   else if (!g.auth) body = <Home />;
   else if (g.onProfile) body = <ProfilePage />;

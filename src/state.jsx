@@ -1,19 +1,19 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { I18N } from './i18n.js';
-import { api, normPlan, normClass, planBody, classBody, normPromo, promoBody } from './api.js';
-import { changesFor, planDiffers, classDiffers, promoDiffers } from './drafts.js';
+import { api, setGymCtx, normPlan, normClass, planBody, classBody, normPromo, promoBody } from './api.js';
+import { changesFor, planDiffers, classDiffers, promoDiffers, gymNames } from './drafts.js';
 import { applyTitle } from './remote.js';
 import { TODAY, TODAY_K, key, clone, themeNow, applyTheme, shortLabel } from './util.js';
 
 export const ADMIN_PAGES = ['plans', 'schedule', 'members', 'promos'];
-export const ADMIN_NAV_PAGES = ['plans', 'schedule', 'members', 'promos', 'closed'];
-/* The closed-days page saves straight away, so it has no draft and is not in ADMIN_PAGES */
-const ADMIN_NAV = [...ADMIN_PAGES, 'closed'];
+export const ADMIN_NAV_PAGES = ['plans', 'schedule', 'members', 'promos', 'marketing', 'analytics', 'closed', 'gyms'];
+/* The closed-days and marketing pages save straight away (analytics only reads), so they have no draft and are not in ADMIN_PAGES */
+const ADMIN_NAV = [...ADMIN_PAGES, 'marketing', 'analytics', 'closed', 'gyms'];
 const Ctx = createContext(null);
 export const useGym = () => useContext(Ctx);
 
 /* Each admin page has its own address: /admin/plans, /admin/schedule, /admin/members, /admin/home */
-const ADMIN_SEG = { plans: 'plans', schedule: 'schedule', members: 'members', promos: 'home', closed: 'closed' };
+const ADMIN_SEG = { plans: 'plans', schedule: 'schedule', members: 'members', promos: 'home', marketing: 'marketing', analytics: 'analytics', closed: 'closed', gyms: 'gyms' };
 export const adminUrl = (k) => '/admin/' + ADMIN_SEG[k];
 const isAdminArea = (p) => /^\/admin(\/|$)/.test(p);
 const adminKeyOf = (p) => {
@@ -44,7 +44,12 @@ export function GymProvider({ children }) {
   const [members, setMembers] = useState([]);
   const [attendance, setAttendance] = useState([]);
   const [closedDays, setClosedDays] = useState([]); // [{date, reason}] closed by the admin; Sundays are always closed
+  const [features, setFeatures] = useState({ unlimitedPlans: true, mail: false, analytics: true, home: true, multiGym: false }); // switches the config server controls (unlimited plans on = the default; mail is on only when the backend can send email)
+  const [gyms, setGyms] = useState([]); // the gyms people can choose from [{id,name,address,status,isDefault}]; empty while one gym is in use
+  const [gymCount, setGymCount] = useState(1); // how many gyms exist (admin); the Gyms page stays reachable while several gyms are switched off but more than one exists
+  const [gymId, setGymId] = useState(null); // the gym being looked at (admin: the one being managed; member: where they train)
   const [bookingWindow, setBookingWindow] = useState('ANY'); // ANY | WEEK | MONTH: how far ahead members may book
+  const [bookingLimit, setBookingLimit] = useState({ horizonDays: 0, lastBookable: '' }); // the booking horizon and the last day members can book (the earlier of the horizon and the window's end)
   const [closedPeriods, setClosedPeriods] = useState([]); // [{kind: WEEK|MONTH, from, to}] weeks/months closed for bookings (admin)
   const [openClasses, setOpenClasses] = useState({});
   const [cal, setCal] = useState({ cy: TODAY.getFullYear(), cm: TODAY.getMonth(), sel: TODAY_K });
@@ -63,7 +68,7 @@ export function GymProvider({ children }) {
 
   /* always-current copy for async code and event listeners */
   const R = useRef({});
-  R.current = { auth, cal, page, plans, basePlans, classes, baseClasses, pending, members, modal, promos, basePromos };
+  R.current = { gyms, gymId, auth, cal, page, plans, basePlans, classes, baseClasses, pending, members, modal, promos, basePromos };
   const busy = useRef(false);
   const sessionReq = useRef(0);
   const tmpId = useRef(0);
@@ -83,7 +88,9 @@ export function GymProvider({ children }) {
   }, []);
   /* The admin loads every item (hidden ones too); everybody else gets the public list. */
   const loadPromos = useCallback(async (admin) => {
-    const list = (await api('GET', admin ? '/api/admin/promos' : '/api/promos')) || [];
+    let list;
+    try { list = (await api('GET', admin ? '/api/admin/promos' : '/api/promos')) || []; }
+    catch (e) { if (e.status !== 404) throw e; list = []; } // the home page is switched off in the config server
     const p = list.map(normPromo);
     setPromos(p); setBasePromos(clone(p));
   }, []);
@@ -97,25 +104,81 @@ export function GymProvider({ children }) {
     setSessions(map);
   }, []);
   const loadClosed = useCallback(async () => { setClosedDays((await api('GET', '/api/closed-days')) || []); }, []);
-  const loadWindow = useCallback(async () => { const w = await api('GET', '/api/booking-window'); setBookingWindow((w && w.mode) || 'ANY'); }, []);
+  const applyWindow = useCallback((w, fallback) => {
+    setBookingWindow((w && w.mode) || fallback);
+    setBookingLimit({ horizonDays: (w && w.horizonDays) || 0, lastBookable: (w && w.lastBookable) || '' });
+  }, []);
+  const loadWindow = useCallback(async () => { applyWindow(await api('GET', '/api/booking-window'), 'ANY'); }, [applyWindow]);
   const loadMemberData = useCallback(async (cy, cm) => {
     const r = await Promise.all([api('GET', '/api/me/bookings'), loadSessions(cy, cm), loadClosed().catch(() => {}), loadWindow().catch(() => {})]);
     setBookings(r[0]);
   }, [loadSessions, loadClosed, loadWindow]);
   const loadMembers = useCallback(async () => { const m = await api('GET', '/api/admin/members'); setMembers(m); return m; }, []);
   const loadAttendance = useCallback(async () => { setAttendance(await api('GET', '/api/admin/attendance')); }, []);
+  /* Several gyms: who may choose which gym, and which one is chosen now. */
+  const chooseGym = useCallback((list, user) => {
+    const stored = (() => { try { return Number(localStorage.getItem('foundry.gym')) || null; } catch (e) { return null; } })();
+    const ok = (id) => id != null && list.some((x) => x.id === id);
+    const def = list.find((x) => x.isDefault);
+    const id = user && user.role === 'MEMBER'
+      ? (ok(user.homeGymId) ? user.homeGymId : ok(stored) ? stored : def ? def.id : (list[0] || {}).id)
+      : (ok(stored) ? stored : def ? def.id : (list[0] || {}).id);
+    return id == null ? null : id;
+  }, []);
+  const loadGyms = useCallback(async (user, f) => {
+    const multi = f ? !!f.multiGym : multiOn.current;
+    let list = [];
+    if (multi) { try { list = (await api('GET', '/api/gyms')) || []; } catch (e) { list = []; } }
+    Object.keys(gymNames).forEach((k) => delete gymNames[k]);
+    list.forEach((x) => { gymNames[x.id] = x.name; });
+    const id = multi ? chooseGym(list, user) : null;
+    if (user && user.role === 'ADMIN') { try { setGymCount(((await api('GET', '/api/admin/gyms')) || []).length); } catch (e) { /* only for the menu */ } }
+    setGyms(list); setGymId(id); setGymCtx(multi && list.length > 0, id);
+    R.current.gymId = id;
+  }, [chooseGym]);
+  /* After the gym changes, everything that belongs to one gym is read again. */
+  const reloadForGym = useCallback(async (user) => {
+    const { cy, cm } = R.current.cal;
+    await loadCatalog();
+    await loadPromos(user.role === 'ADMIN').catch(() => {});
+    await loadClosed().catch(() => {});
+    if (user.role === 'MEMBER') await loadMemberData(cy, cm);
+    else await Promise.all([loadMembers(), loadAttendance(), api('GET', '/api/admin/closed-periods').then(setClosedPeriods).catch(() => {})]);
+  }, [loadCatalog, loadPromos, loadClosed, loadMemberData, loadMembers, loadAttendance]);
+  const homeOn = useRef(true);
+  const multiOn = useRef(false);
+  const loadFeatures = useCallback(async () => {
+    const f = await api('GET', '/api/features');
+    const next = { unlimitedPlans: !f || f.unlimitedPlans !== false, mail: !!(f && f.mail), analytics: !f || f.analytics !== false, home: !f || f.home !== false, multiGym: !!(f && f.multiGym) };
+    const multiChanged = next.multiGym !== multiOn.current;
+    multiOn.current = next.multiGym;
+    setFeatures(next);
+    if (multiChanged && R.current.auth) { // several gyms switched on or off in the config server
+      const me = R.current.auth;
+      loadGyms(me).then(() => reloadForGym(me)).catch(() => {});
+    }
+    if (next.home !== homeOn.current) { // switched in the config server: show or hide the home page items without a reload
+      homeOn.current = next.home;
+      const me = R.current.auth;
+      if (me) loadPromos(me.role === 'ADMIN').catch(() => {});
+    }
+    return next;
+  }, [loadPromos, loadGyms, reloadForGym]);
+  const refreshFeatures = useCallback(() => loadFeatures().catch(() => {}), [loadFeatures]); // the config server can change at any time
   const loadAll = useCallback(async (user, cy, cm) => {
+    const f = await loadFeatures().catch(() => null);
+    await loadGyms(user, f);
     await loadCatalog();
     await loadPromos(user.role === 'ADMIN').catch(() => {}); // the home page items never block a login
     await loadClosed().catch(() => {});
     await loadWindow().catch(() => {});
     if (user.role === 'MEMBER') await loadMemberData(cy, cm);
     else await Promise.all([loadMembers(), loadAttendance(), api('GET', '/api/admin/closed-periods').then(setClosedPeriods).catch(() => {})]);
-  }, [loadCatalog, loadPromos, loadClosed, loadWindow, loadMemberData, loadMembers, loadAttendance]);
+  }, [loadCatalog, loadPromos, loadClosed, loadWindow, loadFeatures, loadGyms, loadMemberData, loadMembers, loadAttendance]);
 
   const clearData = useCallback(() => {
     setPlans([]); setBasePlans([]); setClasses([]); setBaseClasses([]); setPending({});
-    setBookings([]); setSessions({}); setMembers([]); setAttendance([]); setPromos([]); setBasePromos([]); setClosedDays([]); setClosedPeriods([]); setBookingWindow('ANY');
+    setBookings([]); setSessions({}); setMembers([]); setAttendance([]); setPromos([]); setBasePromos([]); setClosedDays([]); setClosedPeriods([]); setBookingWindow('ANY'); setBookingLimit({ horizonDays: 0, lastBookable: '' });
   }, []);
 
   /* ---------- errors and busy guard ---------- */
@@ -212,6 +275,12 @@ export function GymProvider({ children }) {
     })();
     return () => { alive = false; };
   }, [loadAll, loadPromos]);
+  /* the config server can switch things (the home page, Analytics, ...) at any time: ask the backend again every minute */
+  useEffect(() => {
+    if (!auth) return undefined;
+    const t = setInterval(() => { refreshFeatures(); }, 60000);
+    return () => clearInterval(t);
+  }, [auth, refreshFeatures]);
   useEffect(() => { if (!booting && !auth && !fatalErr) loadPromos(false).catch(() => {}); }, [auth, booting, fatalErr, loadPromos]);
 
   /* ---------- login / logout ---------- */
@@ -263,7 +332,7 @@ export function GymProvider({ children }) {
   const editClass = (id, patch) => setClasses((l) => l.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   const addPlan = () => {
     const id = --tmpId.current;
-    setPlans((l) => [...l, { id, name: T('a.plans.new'), price: 39, visits: 6, unlimited: false, isNew: true }]);
+    setPlans((l) => [...l, { id, name: T('a.plans.new'), price: 39, visits: 6, unlimited: false, gymId: '', isNew: true }]);
     focusReq.current = 'plan-name-' + id; setFocusTick((n) => n + 1);
   };
   const addClass = () => {
@@ -276,7 +345,7 @@ export function GymProvider({ children }) {
   const editPromo = (id, patch) => setPromos((l) => l.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   const addPromo = () => {
     const id = --tmpId.current;
-    setPromos((l) => [...l, { id, kind: 'PROMO', title: T('a.promos.new'), body: '', content: '', hideOn: '', colSpan: 0, rowSpan: 0, bgColor: '', bgImage: '', image: '', link: '', active: true, bordered: true, showTitle: true, sortOrder: l.length, isNew: true }]);
+    setPromos((l) => [...l, { id, kind: 'PROMO', gymId: '', title: T('a.promos.new'), body: '', content: '', hideOn: '', colSpan: 0, rowSpan: 0, bgColor: '', bgImage: '', image: '', link: '', marketing: false, marketingSentAt: '', marketingRecipients: 0, active: true, bordered: true, showTitle: true, sortOrder: l.length, isNew: true }]);
     focusReq.current = 'promo-title-' + id; setFocusTick((n) => n + 1);
   };
   const removePromo = (id) => setPromos((l) => l.flatMap((p) => (p.id !== id ? [p] : p.isNew ? [] : [{ ...p, removed: true }])));
@@ -327,9 +396,9 @@ export function GymProvider({ children }) {
   }, [loadClosed, toast]);
   const changeWindow = useCallback(async (mode) => {
     const w = await api('PUT', '/api/admin/booking-window', { mode });
-    setBookingWindow((w && w.mode) || mode);
+    applyWindow(w, mode);
     toast(T('a.window.saved'));
-  }, [toast]);
+  }, [toast, applyWindow]);
   const removeClosed = useCallback(async (date) => {
     await api('DELETE', '/api/admin/closed-days/' + date);
     await loadClosed();
@@ -471,6 +540,29 @@ export function GymProvider({ children }) {
     }
   };
 
+  /* ---------- several gyms ---------- */
+  /* Choose the gym to look at. A member's choice is remembered as their home gym; an admin's only in this browser. */
+  const setGym = useCallback(async (id) => {
+    const me = R.current.auth;
+    if (!me || id === R.current.gymId) return;
+    if (me.role === 'ADMIN' && ADMIN_PAGES.some((k) => changesFor(k, R.current).length) && !window.confirm(T('unsaved.leave'))) return;
+    if (me.role === 'MEMBER') {
+      await api('PUT', '/api/me/home-gym', { gymId: id });
+      setAuth({ ...me, homeGymId: id }); R.current.auth = { ...me, homeGymId: id };
+    } else {
+      try { localStorage.setItem('foundry.gym', String(id)); } catch (e) { /* only a convenience */ }
+    }
+    setGymId(id); setGymCtx(true, id); R.current.gymId = id;
+    setPending({});
+    await reloadForGym(R.current.auth);
+  }, [reloadForGym]);
+  /* The admin sets which gym a member sees first. */
+  const setMemberGym = useCallback(async (memberId, id) => {
+    const res = await api('PUT', '/api/admin/members/' + memberId + '/home-gym', { gymId: id });
+    setMembers((l) => l.map((x) => (x.id === memberId ? { ...x, homeGymId: res.homeGymId } : x)));
+    toast(T('a.gym.memberSaved'));
+  }, [toast]);
+
   /* ---------- language and theme ---------- */
   const setLang = (code) => { I18N.set(code); applyTitle(); setLangState(code); };
   const toggleTheme = () => { const n = themeNow() === 'dark' ? 'light' : 'dark'; applyTheme(n); setThemeState(n); };
@@ -479,7 +571,7 @@ export function GymProvider({ children }) {
     lang, theme, setLang, toggleTheme,
     auth, booting, fatalErr, toastState, toast, modal, setModal, closeModal,
     loginRole, setLoginRole, registering, setRegistering, showLogin, setShowLogin, path, onProfile, navigate,
-    closedDays, addClosed, removeClosed, closedPeriods, setPeriodClosed, bookingWindow, changeWindow,
+    gyms, gymId, gymCount, setGym, setMemberGym, refreshGyms: () => loadGyms(R.current.auth).catch(() => {}), closedDays, addClosed, removeClosed, closedPeriods, setPeriodClosed, bookingWindow, bookingLimit, changeWindow, features, refreshFeatures,
     promos, basePromos, editPromo, addPromo, removePromo, undoPromo, movePromo,
     bookings, sessions, members, attendance, openClasses, toggleOpenClass, cal, pickDay,
     plans, basePlans, classes, baseClasses, pending, page, changes, dirtyCount, dirtyAny, isAdmin,

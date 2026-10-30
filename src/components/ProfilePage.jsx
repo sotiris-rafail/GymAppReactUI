@@ -69,6 +69,10 @@ function Preferences() {
   const [err, setErr] = useState('');
   const [saving, setSaving] = useState(false);
 
+  /* gym.mail.enabled can change on the config server at any time, so ask again whenever the page is opened */
+  useEffect(() => { g.refreshFeatures(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const off = !g.features.mail; // emails are switched off: nothing can be turned on (turning off is still allowed)
+
   useEffect(() => {
     let live = true;
     api('GET', '/api/me/preferences').then((p) => { if (live) setPrefs(p); }).catch((e) => { if (live) setErr(e.message); });
@@ -88,11 +92,12 @@ function Preferences() {
   return (
     <section aria-labelledby="pref-title" className="pref-section">
       <div className="sec-h"><div><h2 id="pref-title">{T('pref.title')}</h2><p className="sub">{T('pref.sub')}</p></div></div>
+      {off && <p className="err" id="pref-off" role="status">{T('pref.off')}</p>}
       <div className="pcard prefs" id="prefs">
         {PREFS.map(([k, t]) => (
           <label className="pref" key={k} htmlFor={'pref-' + k}>
             <span className="pref-text"><b>{T(t)}</b><span className="muted">{T(t + '.d')}</span></span>
-            <input type="checkbox" role="switch" className="switch" id={'pref-' + k} checked={!!(prefs && prefs[k])} disabled={!prefs || saving} onChange={() => flip(k)} />
+            <input type="checkbox" role="switch" className="switch" id={'pref-' + k} checked={!!(prefs && prefs[k])} disabled={!prefs || saving || (off && !prefs[k])} onChange={() => flip(k)} />
           </label>
         ))}
       </div>

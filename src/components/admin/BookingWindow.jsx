@@ -16,6 +16,11 @@ export function currentRanges() {
 export default function BookingWindow() {
   const g = useGym();
   const ranges = currentRanges();
+  const limit = g.bookingLimit;
+  // the end of each window, and whether the booking horizon cuts it short
+  const horizonEnd = limit.horizonDays ? key(new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() + limit.horizonDays)) : '';
+  const windowEnd = { WEEK: key(new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() - ((TODAY.getDay() + 6) % 7) + 6)), MONTH: key(new Date(TODAY.getFullYear(), TODAY.getMonth() + 1, 0)) };
+  const clipped = (m) => !!horizonEnd && horizonEnd < windowEnd[m];
   const [winPending, setWinPending] = useState('');
   const pickWindow = (m) => {
     setWinPending(m);
@@ -29,10 +34,11 @@ export default function BookingWindow() {
         {['ANY', 'WEEK', 'MONTH'].map((m) => (
           <label className="check period" key={m} htmlFor={'window-' + m.toLowerCase()}>
             <input type="radio" name="booking-window" id={'window-' + m.toLowerCase()} checked={(winPending || g.bookingWindow) === m} onChange={() => pickWindow(m)} />
-            <span><b>{T('a.window.' + m)}</b> <span className="muted">{m === 'ANY' ? '' : '(' + ranges[m] + ')'}</span></span>
+            <span><b>{T('a.window.' + m)}</b> <span className="muted">{m === 'ANY' ? '' : '(' + ranges[m] + (clipped(m) ? ', ' + T('a.window.clipped', { date: shortLabel(horizonEnd), n: limit.horizonDays }) : '') + ')'}</span></span>
           </label>
         ))}
       </div>
+      {limit.horizonDays > 0 && <p className="muted small" id="window-horizon">{T('a.window.horizon', { n: limit.horizonDays, date: shortLabel(horizonEnd) })}</p>}
     </div>
   );
 }

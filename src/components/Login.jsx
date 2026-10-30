@@ -17,11 +17,14 @@ function LoginForm({ isAdmin, reg }) {
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
   const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false); // signing in: the button shows it until the data is loaded
   const d = isAdmin ? DEMO.ADMIN : DEMO.MEMBER;
 
   const submit = (e) => {
     e.preventDefault();
     g.run(async () => {
+      setBusy(true);
+      try {
       const em = email.trim();
       if (!em || !pw) { setErr(T('login.needBoth')); return; }
       let path, body, msg;
@@ -36,6 +39,7 @@ function LoginForm({ isAdmin, reg }) {
       try { user = await api('POST', path, body); } catch (er) { setErr(er.message); return; }
       g.setRegistering(false);
       await g.enter(user, msg);
+      } finally { setBusy(false); }
     });
   };
 
@@ -46,7 +50,8 @@ function LoginForm({ isAdmin, reg }) {
         <Field label={T('login.email')} id="login-email"><input type="email" id="login-email" autoComplete="username" maxLength={120} value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
         <Field label={T('login.password')} id="login-password"><input type="password" id="login-password" autoComplete={reg ? 'new-password' : 'current-password'} maxLength={72} value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
         <p className="err" id="login-err" role="alert" hidden={!err}>{err}</p>
-        <button className="btn" type="submit" id="login-submit">{reg ? T('login.create') : T('login.submit')}</button>
+        <button className="btn" type="submit" id="login-submit" disabled={busy} aria-busy={busy}>{busy ? <><span className="spinner" aria-hidden="true" />{T(reg ? 'login.creating' : 'login.signingIn')}</> : (reg ? T('login.create') : T('login.submit'))}</button>
+        <p className="sr-only" role="status">{busy ? T('loading') : ''}</p>
         {!isAdmin && <button type="button" className="linkbtn" id="toggle-reg" onClick={() => g.setRegistering(!reg)}>{reg ? T('login.toLogin') : T('login.toReg')}</button>}
       </form>
       <div className="hint">

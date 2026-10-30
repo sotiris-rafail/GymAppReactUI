@@ -6,6 +6,9 @@ const T = (k, p) => I18N.t(k, p);
 const TN = (k, n, p) => I18N.tn(k, n, p);
 const daysText = (a) => (a.length ? a.map((d) => I18N.day(d - 1)).join(', ') : T('chg.none'));
 const cv = (v) => (v === '' || v == null ? T('chg.empty') : String(v));
+/* gym names by id, filled by the app while several gyms are in use */
+export const gymNames = {};
+const gn = (v) => (v === '' || v == null ? T('a.gym.all') : gymNames[v] || String(v));
 const line = (label, from, to) => ({ label, from: String(from), to: String(to) });
 
 export function planChanges(plans, base) {
@@ -16,6 +19,7 @@ export function planChanges(plans, base) {
     if (p.removed) { out.push({ kind: 'remove', title: b.name || T('plan.untitled'), lines: [{ text: T('chg.planRemoved') }] }); return; }
     const l = [];
     if (p.name !== b.name) l.push(line(T('a.plan.name'), cv(b.name), cv(p.name)));
+    if (String(p.gymId) !== String(b.gymId)) l.push(line(T('a.gym.validAt'), gn(b.gymId), gn(p.gymId)));
     if (p.price !== b.price) l.push(line(T('a.plan.price'), money(b.price), money(p.price)));
     if (!!p.unlimited !== !!b.unlimited) l.push(line(T('a.plan.visits'), b.unlimited ? T('plan.unlimited') : b.visits, p.unlimited ? T('plan.unlimited') : p.visits));
     else if (!p.unlimited && p.visits !== b.visits) l.push(line(T('a.plan.visits'), b.visits, p.visits));
@@ -62,10 +66,11 @@ export function promoChanges(promos, base) {
   const kind = (k) => T('promo.kind.' + k);
   const yn = (v) => T(v ? 'chg.yes' : 'chg.no');
   promos.forEach((p) => {
-    if (p.isNew) { out.push({ kind: 'add', title: p.title || T('promo.untitled'), lines: [{ text: kind(p.kind) + (p.image ? ', ' + T('chg.photo') : '') + (p.active ? '' : ', ' + T('a.promo.hidden')) }] }); return; }
+    if (p.isNew) { out.push({ kind: 'add', title: p.title || T('promo.untitled'), lines: [{ text: kind(p.kind) + (p.image ? ', ' + T('chg.photo') : '') + (p.active ? '' : ', ' + T('a.promo.hidden')) + (p.marketing ? ', ' + T('chg.marketing') : '') }] }); return; }
     const b = base.find((x) => x.id === p.id); if (!b) return;
     if (p.removed) { out.push({ kind: 'remove', title: b.title || T('promo.untitled'), lines: [{ text: T('chg.promoRemoved') }] }); return; }
     const l = [];
+    if (String(p.gymId) !== String(b.gymId)) l.push(line(T('a.gym.validAt'), gn(b.gymId), gn(p.gymId)));
     if (p.kind !== b.kind) l.push(line(T('a.promo.kind'), kind(b.kind), kind(p.kind)));
     if (p.title !== b.title) l.push(line(T('a.promo.title'), cv(b.title), cv(p.title)));
     if (p.body !== b.body) l.push(line(T('a.promo.body'), cv(b.body), cv(p.body)));
@@ -79,6 +84,7 @@ export function promoChanges(promos, base) {
     if (p.showTitle !== b.showTitle) l.push(line(T('a.promo.showTitle'), yn(b.showTitle), yn(p.showTitle)));
     if (p.bordered !== b.bordered) l.push(line(T('a.promo.bordered'), yn(b.bordered), yn(p.bordered)));
     if (p.active !== b.active) l.push(line(T('a.promo.active'), yn(b.active), yn(p.active)));
+    if (p.marketing !== b.marketing) l.push(line(T('a.promo.marketing'), yn(b.marketing), yn(p.marketing)));
     if (l.length) out.push({ kind: 'edit', title: b.title || T('promo.untitled'), lines: l });
   });
   // The order of the items that stay (new and removed ones are listed above)
@@ -98,10 +104,10 @@ export function changesFor(page, d) {
   return [];
 }
 
-export const planDiffers = (p, b) => p.name !== b.name || p.price !== b.price || !!p.unlimited !== !!b.unlimited || (!p.unlimited && p.visits !== b.visits);
+export const planDiffers = (p, b) => String(p.gymId) !== String(b.gymId) || p.name !== b.name || p.price !== b.price || !!p.unlimited !== !!b.unlimited || (!p.unlimited && p.visits !== b.visits);
 export const classDiffers = (c, b) =>
   c.name !== b.name || c.coach !== b.coach || c.time !== b.time || c.duration !== b.duration ||
   c.capacity !== b.capacity || c.days.join() !== b.days.join();
 export const promoDiffers = (p, b) =>
-  p.kind !== b.kind || p.title !== b.title || p.body !== b.body || p.image !== b.image || p.link !== b.link || p.content !== b.content || p.hideOn !== b.hideOn || p.colSpan !== b.colSpan || p.rowSpan !== b.rowSpan || p.bgColor !== b.bgColor || p.bgImage !== b.bgImage ||
-  p.active !== b.active || p.bordered !== b.bordered || p.showTitle !== b.showTitle || p.sortOrder !== b.sortOrder;
+  String(p.gymId) !== String(b.gymId) || p.kind !== b.kind || p.title !== b.title || p.body !== b.body || p.image !== b.image || p.link !== b.link || p.content !== b.content || p.hideOn !== b.hideOn || p.colSpan !== b.colSpan || p.rowSpan !== b.rowSpan || p.bgColor !== b.bgColor || p.bgImage !== b.bgImage ||
+  p.active !== b.active || p.bordered !== b.bordered || p.showTitle !== b.showTitle || p.marketing !== b.marketing || p.sortOrder !== b.sortOrder;

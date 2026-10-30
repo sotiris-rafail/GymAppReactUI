@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { I18N } from '../../i18n.js';
 import { useGym } from '../../state.jsx';
 import { TODAY, startOf, shortLabel } from '../../util.js';
@@ -40,6 +41,7 @@ function Attendance() {
 /* Admin page 3: members, their plans, and who attends which class this month */
 export default function MembersPage() {
   const g = useGym();
+  useEffect(() => { g.refreshFeatures(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <>
       <section aria-label={T('a.members.aria')}>
@@ -55,11 +57,21 @@ export default function MembersPage() {
                 <span className="massign">
                   <button className="btn ghost small" id={'hist-' + m.id} onClick={() => g.openHistory(m.id)}>{T('a.hist.btn')}</button>
                   {m.planName != null && <span className="muted">{m.unlimited ? T('a.members.visitsUnlimited', { used: m.visitsUsedThisMonth }) : T('a.members.visits', { used: m.visitsUsedThisMonth, total: m.visitsPerMonth })}</span>}
+                  {g.features.multiGym && (
+                    <select className="plansel" id={'mgym-' + m.id} aria-label={T('a.gym.homeFor', { name: m.name })} value={m.homeGymId == null ? '' : String(m.homeGymId)}
+                      onChange={(e) => g.run(() => g.setMemberGym(m.id, e.target.value === '' ? null : Number(e.target.value)))}>
+                      <option value="">{T('a.gym.homeDefault')}</option>
+                      {g.gyms.map((x) => <option key={x.id} value={String(x.id)}>{x.name}</option>)}
+                    </select>
+                  )}
                   <select className={'plansel' + (changed ? ' changed' : '')} id={'mplan-' + m.id} value={cur == null ? '' : String(cur)}
                     aria-label={T('a.members.planFor', { name: m.name })}
                     onChange={(e) => g.choosePlan(m.id, e.target.value === '' ? null : Number(e.target.value))}>
                     <option value="">{T('a.members.noPlan')}</option>
-                    {g.basePlans.map((p) => <option key={p.id} value={String(p.id)}>{p.name || T('plan.untitled')}</option>)}
+                    {g.basePlans.map((p) => {
+                      const blocked = !g.features.unlimitedPlans && p.unlimited && p.id !== m.planId;
+                      return <option key={p.id} value={String(p.id)} disabled={blocked}>{(p.name || T('plan.untitled')) + (blocked ? T('a.members.unlimitedOff') : '')}</option>;
+                    })}
                   </select>
                 </span>
               </div>

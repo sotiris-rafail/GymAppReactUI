@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { I18N } from '../../i18n.js';
 import { useGym } from '../../state.jsx';
-import { fileToDataUrl, safeImage, safeLink, instagramRef, isLive, TODAY_K, addDaysKey } from '../../util.js';
+import { fileToDataUrl, safeImage, safeLink, instagramRef, isLive, TODAY_K, addDaysKey, fmtDate } from '../../util.js';
 import Photo from '../Photo.jsx';
 import PromoBoard from '../PromoBoard.jsx';
 import { Field, NewTag, RemovedCard } from './fields.jsx';
@@ -84,6 +84,25 @@ function ColorField({ p, set, id }) {
   );
 }
 
+/* "Send as a marketing email": the item is also emailed to members who turned marketing emails on, once, after Save. */
+function MarketingTick({ p, set, id }) {
+  const g = useGym();
+  const sent = !!p.marketingSentAt;
+  const noContent = !p.body.trim() && !p.link.trim();
+  return (
+    <div className="promo-marketing" id={id('marketing-box')}>
+      <label className="check">
+        <input type="checkbox" id={id('marketing')} checked={p.marketing} disabled={sent} onChange={(e) => set({ marketing: e.target.checked })} /> {T('a.promo.marketing')}
+      </label>
+      {sent
+        ? <p className="muted small" id={id('marketing-sent')}>{T('a.promo.marketingSent', { date: fmtDate(p.marketingSentAt.slice(0, 10)), n: p.marketingRecipients })}</p>
+        : <p className="muted small">{T('a.promo.marketingHint')}</p>}
+      {p.marketing && !sent && noContent && <p className="err small" id={id('marketing-empty')}>{T('a.promo.marketingEmpty')}</p>}
+      {p.marketing && !sent && !g.features.mail && <p className="err small" id={id('marketing-off')}>{T('a.promo.marketingOff')}</p>}
+    </div>
+  );
+}
+
 function PromoEditor({ p, index, count }) {
   const g = useGym();
   const set = (patch) => g.editPromo(p.id, patch);
@@ -97,6 +116,14 @@ function PromoEditor({ p, index, count }) {
             {KINDS.map((k) => <option key={k} value={k}>{T('promo.kind.' + k)}</option>)}
           </select>
         </Field>
+        {g.features.multiGym && (
+          <Field label={T('a.gym.validAt')} id={id('gym')}>
+            <select id={id('gym')} className="sel" value={String(p.gymId)} onChange={(e) => set({ gymId: e.target.value })}>
+              <option value="">{T('a.gym.all')}</option>
+              {g.gyms.map((x) => <option key={x.id} value={String(x.id)}>{x.name}</option>)}
+            </select>
+          </Field>
+        )}
         <Field label={T('a.promo.title')} id={id('title')} wide>
           <input type="text" id={id('title')} maxLength={80} value={p.title} onChange={(e) => set({ title: e.target.value })} />
         </Field>
@@ -143,6 +170,7 @@ function PromoEditor({ p, index, count }) {
           <span className="muted small">{T('a.promo.sizeHint')}</span>
         </Field>
       </div>
+      <MarketingTick p={p} set={set} id={id} />
       <div className="promo-row">
         <label className="check">
           <input type="checkbox" id={id('active')} checked={p.active} onChange={(e) => set({ active: e.target.checked })} /> {T('a.promo.active')}
@@ -167,6 +195,15 @@ function PromoEditor({ p, index, count }) {
 export default function PromosPage() {
   const g = useGym();
   const shown = g.promos.filter((p) => !p.removed);
+  useEffect(() => { g.refreshFeatures(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!g.features.home) {
+    return (
+      <section aria-label={T('a.promos.aria')}>
+        <div className="sec-h"><div><h2>{T('a.promos.title')}</h2></div></div>
+        <p className="err" id="promos-off" role="alert">{T('a.promos.off')}</p>
+      </section>
+    );
+  }
   return (
     <section aria-label={T('a.promos.aria')}>
       <div className="sec-h"><div><h2>{T('a.promos.title')}</h2><p className="sub">{T('a.promos.sub')}</p></div></div>

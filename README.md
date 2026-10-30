@@ -260,6 +260,14 @@ warns while it is empty and the backend answers 400) and a background colour and
 are optional and sit on the background; the tile lifts with a shadow on hover and opens the link in a new tab. Width,
 height, date limit and the other options work as for any item.
 
+## Booking window and booking horizon
+
+The member calendar greys out every day the backend would refuse, with a reason: a day outside the admin's window (current
+week or month), or later than the last bookable day (`lastBookable` from `GET /api/booking-window`, which is the earlier of
+today plus `gym.booking-horizon-days` and the end of the window). The admin's Booking window box on the Schedule page says
+how many days the horizon is, which date that reaches today, and, for the week and month options, when the horizon would end
+before the window does. The horizon itself is a backend/config server setting (applied when the backend starts), not set in the UI.
+
 ## Tile grid
 
 The home page grid has 4 equal columns on desktop and tablet (windows 560 px wide or more) and 2 columns on phones.
@@ -274,3 +282,33 @@ and the plan has no visit limit. Members on it see "Unlimited visits" on their p
 "left" figure, and are never blocked by "No visits left". The Members page and a member's history show "N visits,
 unlimited". Plans that were already there stay limited. A member's history keeps the plan as it was when it was assigned,
 so ticking the box on a plan someone already holds does not rewrite their past (assign the plan again to record it).
+
+### Turning unlimited plans on and off
+
+The option is controlled from the config server (backend setting `plans.unlimited-enabled`, see the backend README). The
+UI asks the backend (`GET /api/features`) each time the admin opens the Plans or Members page. When it is off, the Plans
+page shows a notice, the Unlimited visits box is greyed out for every plan that is not already unlimited (and for new
+plans), and the Members page does not offer unlimited plans to members who are not already on one. Plans that are already
+unlimited keep working, and members on them keep booking. The backend enforces the same rule, so an old page cannot get round it.
+
+## Marketing emails (admin)
+
+* **Home page items** have a check box **Also send as a marketing email**. After you save, members who turned on *Marketing
+  emails* in their Preferences get the item by email within a few minutes, once. It needs some text or a link (the editor
+  warns otherwise). Once sent, the item shows when and to how many members, and the box is locked. If the backend cannot send
+  email (`gym.mail.enabled` is off) the editor says so.
+* **Marketing** (new page in the admin side bar, `/admin/marketing`) is for emails that are not a home page item: write a
+  subject, a message (plain text) and an optional link, save it as a draft, and **Send to N members** (N is the number of
+  members who have marketing emails on; you are asked to confirm). Drafts can be edited and deleted; sent emails stay as a
+  record with delivered / waiting / failed / skipped counts (**Refresh delivery counts**). This page saves straight away, so it
+  has no Save changes bar. Drafts can be written even when sending is off; sending is then disabled with an explanation.
+* **Members' Preferences**: while `gym.mail.enabled` is `false` on the config server the switches that are off cannot be turned
+  on (a notice explains why); one that is already on can still be turned off. The page asks the backend each time it opens, so a
+  change on the config server shows within the backend's 5-minute refresh, without a restart.
+
+
+## Analytics page (admin)
+
+`/admin/analytics`: read-only numbers from `GET /api/admin/analytics`. Choose Last 4 weeks, Last 12 weeks, This year or
+a custom From / To (To is today when left empty). Charts are inline SVG with hover details and a table view; the CSV
+button downloads the chosen period. Source: `src/components/admin/AnalyticsPage.jsx`.
